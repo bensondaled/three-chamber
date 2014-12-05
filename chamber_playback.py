@@ -16,17 +16,25 @@ mov = cv2.VideoCapture(os.path.join(dirr,cond+'-cam0.avi'))
 
 valid = True
 t0 = t[0]
-tidx = 0
+tidx = 1
 delay = Ts
 cv2.namedWindow('Movie')
 cv2.createTrackbar('Ts', 'Movie', delay, 200, lambda x: x)
-paused = False
+paused = True
 starts = []
 stops = []
 started = False
+
+#initial frame
+valid,frame = mov.read()
+tstr = "%0.3f"%(0.0)
+cv2.putText(frame, tstr, (0,frame.shape[0]-3), cv2.FONT_HERSHEY_SIMPLEX, 1., (255,255,255))
+cv2.imshow('Movie', frame)
 while valid:
     if not paused:
         valid,frame = mov.read()
+        if not valid:
+            break
         tstr = "%0.3f"%(t[tidx]-t0)
         cv2.putText(frame, tstr, (0,frame.shape[0]-3), cv2.FONT_HERSHEY_SIMPLEX, 1., (255,255,255))
         cv2.imshow('Movie', frame)
@@ -41,17 +49,17 @@ while valid:
         break
     elif k == ord('z'):
         if started:
-            stops.append(-1)
-        starts.append(t[tidx-1])
+            stops.append('(none)')
+        starts.append(tstr)
         started = True
     elif k == ord('m'):
         if not started:
-            starts.append(-1)
-        stops.append(t[tidx-1])
+            starts.append('(none)')
+        stops.append(tstr)
         started = False
 
 if len(starts) > len(stops):
-    stops.append(-1)
+    stops.append('(none)')
 
 cv2.destroyAllWindows()
 fw = open(os.path.join(dirr,'results-'+cond+'.csv'), 'w')
