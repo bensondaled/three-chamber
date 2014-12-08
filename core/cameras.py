@@ -28,6 +28,7 @@ class Camera(object):
 
         time.sleep(0.1)
         self.vc.read()
+        self.vc.read()
     def read(self):
         success,frame = self.vc.read()
         if self.color_mode==BW:
