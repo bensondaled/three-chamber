@@ -7,6 +7,7 @@ pjoin = os.path.join
 import json
 import re
 import itertools as it
+import random as rand
 
 #numpy & scipy
 from scipy.io import savemat
@@ -46,10 +47,15 @@ def ginput(n):
     except:
         pts = np.array([])
     return pts
-def contour_center(c):
-    return np.round(np.mean(c[:,0,:],axis=0)).astype(int)
+def contour_center(c, asint=False):
+    res = np.mean(c, axis=0)
+    if asint:
+        res = np.round(res).astype(int)
+    return res
 def dist(pt1, pt2):
-    return np.sqrt((pt1[0]-pt2[0])**2 + (pt1[1]-pt2[1])**2)
+    pt1 = np.array(pt1)
+    pt2 = np.array(pt2)
+    return np.sqrt(np.sum((pt1-pt2)**2))
 
 class FileHandler(object):
     MOV = 0
@@ -121,53 +127,138 @@ class MouseTracker(object):
         self.load_time()
         self.height, self.width = self.background.shape
         self.mov = VideoCapture(self.fh.get_path(self.fh.TRIAL, self.fh.MOV))
+        self.framei = 0
+        #self.get_frame(self.mov,n=40) #MUST ADJUST TIME IF USING THIS
         self.load_pts()
-        self.classify_pts()
-        self.results = dict(centers=[], heat=np.zeros((self.height,self.width)), skipped=0, centers_all=[], n_frames=0)
+        self.make_rooms()
 
     def end(self):
+        self.results = dict(pos=self.pos, time=np.array(self.t)-self.t[0], chamber=self.chamber, guess=self.guess, heat=self.heat)
         np.savez(self.fh.make_path('tracking.npz'), **self.results)
         savemat(self.fh.make_path('tracking.mat'), self.results)
         
         self.mov.release()
         destroyAllWindows()
+    def man_update(self, d):
+        for k,v in d.items():
+            setattr(self,k,v)
+    def make_rooms(self):
+        self.path_x = mpl_path.Path(self.pts[np.array([self.xmli,self.xoli,self.xori,self.xmri])])
+        self.path_y = mpl_path.Path(self.pts[np.array([self.ymli,self.yoli,self.yori,self.ymri])])
+        self.path_z = mpl_path.Path(self.pts[np.array([self.zmli,self.zoli,self.zori,self.zmri])])
+        self.border_mask = np.zeros((self.height,self.width))
+        pth = mpl_path.Path(self.pts[np.array([self.yoli,self.yori,self.ymri,self.ycri,self.zmli,self.zoli,self.zori,self.zmri,self.zcri,self.xmli,self.xoli,self.xori,self.xmri,self.xcri,self.ymli])])
+        for iy in xrange(self.border_mask.shape[0]):
+            for ix in xrange(self.border_mask.shape[1]):
+                self.border_mask[iy,ix] = pth.contains_point([ix,iy])
     def classify_pts(self):
-        glob_cent = np.mean(self.pts,axis=0)
-        print glob_cent
-        sys.exit(0)
+        #stored in (x,y)
+        #c: center
+        #m: middle
+        #o: out
+        #x: bottom arm, y: left arm, z: right arm
+        #l: left when going down arm, r: right when going down arm
+        #pt is: [x/y/z c/m/o l/r]
+        X,Y = 0,1
+        def nn(pidx,n,ex=[]):
+            #idxs of n closest pts to p, excluding all idxs in ex
+            p = self.pts[pidx]
+            ds = np.array([dist(pp,p) for pp in self.pts])
+            idxs =  np.argsort(ds)
+            idxs = np.array([i for i in idxs if i not in ex])
+            return idxs[:n]
+        def sortby(pidxs, dim):
+            pts = self.pts[np.array(pidxs)]
+            return pidxs[np.argsort(pts[:,dim])]
+        dists = np.array([dist(self.pts_c, p) for p in self.pts])
+        c3i = self.c3i[np.argsort(self.pts[self.c3i][:,0])]
+        m6i = self.m6i
+        o6i = self.o6i
+        
+        #classify them:
+        xcri=ycli=c3i[0]
+        ycri=zcli=c3i[1]
+        zcri=xcli=c3i[2]
+        temp = nn(xcri, 2, ex=c3i)
+        ymli,xmri = sortby(temp, Y)
+        temp = nn(ycri, 2, ex=c3i)
+        ymri,zmli = sortby(temp, X)
+        temp = nn(zcri, 2, ex=c3i)
+        zmri,xmli = sortby(temp, Y)
+        cm9 = [xcri,ycri,zcri,xmri,xmli,ymri,ymli,zmri,zmli]
+
+        xoli = nn(xmli, 1, ex=cm9)[0]
+        xori = nn(xmri, 1, ex=cm9)[0]
+        yoli = nn(ymli, 1, ex=cm9)[0]
+        yori = nn(ymri, 1, ex=cm9)[0]
+        zoli = nn(zmli, 1, ex=cm9)[0]
+        zori = nn(zmri, 1, ex=cm9)[0]
+
+        pts_dict = dict(pts=self.pts,xcri=xcri,ycli=ycli,ycri=ycri,zcli=zcli,zcri=zcri,xcli=xcli,xmri=xmri,ymli=ymli,ymri=ymri,zmli=zmli,xmli=xmli,zmri=zmri,xoli=xoli,xori=xori,yoli=yoli,yori=yori,zoli=zoli,zori=zori)
+        self.man_update(pts_dict)
+
+        np.savez(self.fh.make_path('pts.npz', mode=self.fh.BL), **pts_dict)
+    def verify_pts(self):
+        if len(self.pts) != 15:
+            return False
+
+        self.pts_c = np.mean(self.pts,axis=0)
+        dists = np.array([dist(self.pts_c, p) for p in self.pts])
+        c3i = np.argsort(dists)[:3]
+        m6i = np.argsort(dists)[3:9]
+        o6i = np.argsort(dists)[9:]
+
+        if np.std(dists[c3i]) > 0.5 or  np.std(dists[m6i]) > 0.5 or np.std(dists[o6i]) > 1.7:
+            return False
+       
+        self.c3i = c3i
+        self.m6i = m6i
+        self.o6i = o6i
+        return True
         
     def load_pts(self):
-        self.border_mask = np.zeros((self.height,self.width),dtype=bool)
-        self.border_mask[50:450,100:550] = True
-        nbins = 10
-        img = self.background_image.copy()
-        img2 = img.copy()
-        #img *= self.border_mask
-        img = cv2.Laplacian(img, cv2.CV_32F, ksize=9)
-        #pl.figure();pl.imshow(img);pl.title('Laplace')
-        binsy,binsx = [np.linspace(0,dim,nbins) for dim in img2.shape]
-        for b1y,b0y in zip(binsy[1:],binsy[:-1]):
-            for b1x,b0x in zip(binsx[1:],binsx[:-1]):
-                sub = img2[b0y:b1y, b0x:b1x]
-                sub[sub<np.percentile(sub,98)] = 0
-                img2[b0y:b1y, b0x:b1x] = sub
-        img[img2==0] = 0
-        #pl.figure();pl.imshow(img);pl.title('Thresholding')
-        img += abs(img.min())
-        img[img>np.percentile(img,0.08)] = 0
-        #pl.figure();pl.imshow(img);pl.title('2nd Thresholding')
-        #pl.figure();pl.imshow(self.background_image);pl.title('Background')
-        img[img>0] = 1
-        img = img*255
-        #pl.figure();pl.imshow(img);pl.title('Result')
-        contours,_ = cv2.findContours(img.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        areas = map(cv2.contourArea, contours)
-        best = np.argsort(areas)[::-1][:15]
-        contours = np.array(contours)[best]
-        x = np.zeros(img.shape, dtype=np.uint8)
-        cv2.drawContours(x, contours, -1, (255,255,255))
-        #pl.figure();pl.imshow(x);pl.title('Result contours')
-        self.pts = np.array(map(contour_center, contours))
+        try:
+            self.man_update(np.load(self.fh.make_path('pts.npz', mode=self.fh.BL)))
+        except:
+            invalid = True
+            attempts = 0
+            while invalid:
+                img = self.background_image.copy()
+                lp_ksizes = [5,7,9,11,13,15]
+                lp_ksize = rand.choice(lp_ksizes)
+                sbd_areas = [range(20,26), range(48,54)]
+                sbd_area = [rand.choice(sbd_areas[0]), rand.choice(sbd_areas[1])]
+                sbd_circs = [np.arange(0.22,0.35), range(1000,1001)]
+                sbd_circ = [rand.choice(sbd_circs[0]), rand.choice(sbd_circs[1])]
+                subtr_rowmeans = rand.choice([True,False])
+
+                if subtr_rowmeans:
+                    img = img-np.mean(img,axis=1)[:,None]
+                img = cv2.Laplacian(img, cv2.CV_32F, ksize=lp_ksize)
+                img += abs(img.min())
+                img = img/img.max() *255
+                img = img.astype(np.uint8)
+
+                #pl.figure(1);pl.imshow(img,cmap=pl.cm.Greys_r)
+                params = cv2.SimpleBlobDetector_Params()
+                params.filterByArea = True
+                params.filterByCircularity = True
+                params.minArea,params.maxArea = sbd_area
+                params.minCircularity,params.maxCircularity = sbd_circ
+                detector = cv2.SimpleBlobDetector(params)
+                fs = detector.detect(img)
+                pts = np.array([f.pt for f in fs])
+                pts = np.round(pts).astype(np.uint32)
+                x = img.copy()
+                for pt in pts:
+                    cv2.circle(x, tuple(pt), 4, (255,255,255), thickness=3)
+                #pl.figure(2);pl.imshow(x)
+                self.pts = pts
+                invalid = not self.verify_pts()
+                attempts += 1
+                if attempts > 2000:
+                    raise Exception('Pts cannot be found.')
+            self.classify_pts()
     def load_time(self):
         with open(self.fh.get_path(self.fh.TRIAL,self.fh.TIME),'r') as f:
             self.time = np.array(json.loads(f.read()))
@@ -180,11 +271,11 @@ class MouseTracker(object):
             background_image = bg['image']
         except:
             blmov = VideoCapture(self.fh.get_path(self.fh.BL,self.fh.MOV))
-            valid, background = self.get_frame(blmov, n=-1, blur=True)
+            valid, background, ts = self.get_frame(blmov, n=-1, blur=True)
             blmov.release()
             
             blmov = VideoCapture(self.fh.get_path(self.fh.BL,self.fh.MOV))
-            valid, background_image = self.get_frame(blmov, n=-1, blur=False)
+            valid, background_image, ts = self.get_frame(blmov, n=-1, blur=False)
             blmov.release()
             
             np.savez(self.fh.make_path('background.npz',mode=self.fh.BL), computations=background, image=background_image)
@@ -192,29 +283,32 @@ class MouseTracker(object):
     def get_frame(self, mov, n=1, skip=0, blur=True):
         for s in range(skip):
             mov.read()
+            self.framei += 1 #the number of frames that have been read
         if n==-1:
             n = 99999999999999999.
         def get():
             valid, frame = mov.read()
             if not valid:
-                return (False, None)
+                return (False, None, None)
+            ts = self.time[self.framei]
+            self.framei += 1
             frame = frame.astype(np.float32)
             frame = cvtColor(frame, CV_RGB2GRAY)
             if blur:
                 frame = GaussianBlur(frame, (self.kernel,self.kernel), 0)
-            return valid,frame
+            return valid,frame,ts
 
-        valid,frame = get()
+        valid,frame,ts = get()
         i = 1
         while valid and i<n:
-            valid,new = get()
+            valid,new,ts = get()
             i += 1
             if valid:
                 frame += new
         
         if frame!=None:
             frame = frame/i
-        return (valid, frame)
+        return (valid, frame, ts)
     def find_possible_contours(self, frame, consecutive_skips):
         self.diff = absdiff(frame,self.background)
         _, self.diff = threshold(self.diff, self.diff_thresh, 1, THRESH_BINARY)
@@ -230,11 +324,21 @@ class MouseTracker(object):
         return possible
     def choose_best_contour(self, possible):
         chosen = possible[np.argmax([contourArea(c) for c in possible])]   
-        center = contour_center(chosen)
+        center = contour_center(chosen,asint=True)[0]
         return center
     def label_frame(self, frame, center):
         showimg = np.copy(frame).astype(np.uint8)
-        circle(showimg, tuple(center), radius=10, thickness=5, color=(255,255,255))
+        if self.path_x.contains_point(center):
+            color = (0,0,0)
+        elif self.path_y.contains_point(center):
+            color = (210,210,210)
+        elif self.path_z.contains_point(center):
+            color = (100,100,100)
+        else:
+            color = (255,255,255)
+        circle(showimg, tuple(center), radius=10, thickness=5, color=color)
+        for pt in self.pts.astype(int):
+            circle(showimg, tuple(pt), radius=4, thickness=3, color=(0,0,0))
         return showimg
     def show_frame(self, frame):
         cv2imshow('Tracking',frame)
@@ -252,21 +356,28 @@ class MouseTracker(object):
             writer.open(self.fh.make_path('tracking.avi'),self.fourcc,round(self.fs),frameSize=fsize,isColor=True)
         
         #run
+        self.pos = []
+        self.t = []
+        self.chamber = []
+        self.guess = []
+        self.heat = np.zeros((self.height,self.width))
         consecutive_skips = 0
-        self.last_center = np.round(np.array([self.height/2., self.width/2.])).astype(int)
-        valid,frame = self.get_frame(self.mov,skip=self.resample-1)
+        self.last_center = np.mean(self.pts[np.array([self.xori, self.xoli])],axis=0).astype(int)
+        valid,frame,ts = self.get_frame(self.mov,skip=self.resample-1)
         while valid:
             possible = self.find_possible_contours(frame,consecutive_skips)
             
             if len(possible) == 0:
                 center = self.last_center
-                self.results['skipped'] += 1
+                self.guess.append(True)
                 consecutive_skips+=1
             else:
                 center = self.choose_best_contour(possible)
-                self.results['centers'].append(center)
-                self.results['heat'][center[1],center[0]] += 1
-            self.results['centers_all'].append(center) 
+                self.guess.append(False)
+                consecutive_skips = 0
+            self.pos.append(center)
+            self.t.append(ts)
+            self.heat[center[1],center[0]] += 1
             
             if show or save:
                 lframe = self.label_frame(frame, center)
@@ -277,10 +388,8 @@ class MouseTracker(object):
             if save:
                 writer.write(save_frame)
              
-            self.results['n_frames'] += 1
             self.last_center = center
-            
-            valid,frame = self.get_frame(self.mov,skip=self.resample-1)
+            valid,frame,ts = self.get_frame(self.mov,skip=self.resample-1)
         
             if tk_var_frame != None:
                 tk_var_frame[0].set('%i/%i'%(self.results['n_frames'], len(self.time)/float(self.resample) ))
@@ -403,8 +512,9 @@ if __name__=='__main__':
         root.mainloop()
 
     elif mode == 'nongui':
-        data_dir = '/Users/Benson/Desktop/data/'
-        mouse = 'test'
+        data_dir = '/Users/Benson/Desktop/data'
+        mouse = '12_09_2014_black6_blackbacground_coveredplatform'
+        mouse = 'white1'
 
-        mt = MouseTracker(mouse=mouse, data_dir=data_dir, diff_thresh=70)
+        mt = MouseTracker(mouse=mouse, n=3, data_dir=data_dir, diff_thresh=30)
         mt.run(show=True, save=False)

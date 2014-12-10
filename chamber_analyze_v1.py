@@ -1,3 +1,5 @@
+#For the original setup before the overhaul. Names are _BG etc by convention, and separate folders exist for basline and test
+
 #natives
 import sys
 import os
