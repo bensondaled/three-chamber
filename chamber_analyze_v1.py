@@ -78,7 +78,7 @@ class Analysis(object):
         self.trial_name = fh[mode][TRIAL][NAME]
         self.trial_dir = fh[mode][TRIAL][DIR]
     def get_time(self):
-        time = json.loads(open(os.path.join(self.trial_dir, '%s-timestamps.json'%self.trial_name),'r').read())[0]
+        time = json.loads(open(os.path.join(self.trial_dir, '%s-timestamps.json'%self.trial_name),'r').read())
         return time
     def get_tracking(self):
         tracking = np.load(os.path.join(self.trial_dir,'%s_tracking.npz'%self.trial_name))
@@ -161,8 +161,8 @@ class MouseTracker(object):
         self.height, self.width = np.shape(self.background)
         
         timefile = os.path.join(self.trial_dir, self.trial_name+'-timestamps.json')
-        self.time = json.loads(open(timefile,'r').read())[0]
-        vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam0.avi')
+        self.time = json.loads(open(timefile,'r').read())
+        vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam.avi')
         self.mov = VideoCapture(vidfile)
         
         self.results = {}
@@ -282,11 +282,11 @@ class MouseTracker(object):
         except:
             #print "Acquiring background information..."
             #print os.path.join(self.background_dir, self.background_name+'-cam0.avi')
-            blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam0.avi'))
+            blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam.avi'))
             valid, background = self.get_frame(blmov, n=-1, blur=True)
             blmov.release()
             
-            blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam0.avi'))
+            blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam.avi'))
             valid, background_image = self.get_frame(blmov, n=-1, blur=False)
             blmov.release()
             

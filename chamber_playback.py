@@ -12,7 +12,7 @@ t = json.loads(open(os.path.join(dirr,cond+'-timestamps.json')).read())
 t = np.squeeze(t)
 Ts = int(np.rint(np.mean(t[1:]-t[:-1])*1000))
 
-mov = cv2.VideoCapture(os.path.join(dirr,cond+'-cam0.avi'))
+mov = cv2.VideoCapture(os.path.join(dirr,cond+'-cam.avi'))
 
 valid = True
 t0 = t[0]
