@@ -27,7 +27,7 @@ if __name__=='__main__':
         cam.read()
     
     #baseline
-    mon = Monitor(cam, show=True, run_name=name+'_BL', duration=10., dirr=dirr)
+    mon = Monitor(cam, show=True, run_name=name+'_BL', duration=15., dirr=dirr)
     mon.go()
     
     _ = raw_input('Hit enter to start recording.')
