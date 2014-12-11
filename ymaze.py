@@ -7,9 +7,10 @@ import time
 
 if __name__=='__main__':
     name = None
-    while name==None or name in os.listdir('.'):
+    dirr = './data'
+    while name==None or name in os.listdir(dirr):
         name = raw_input('Enter name of experiment (will default to date string):')
-        if name in os.listdir('.'):
+        if name in os.listdir(dirr):
             print "Experiment file with this name already exists."
     
     duration = None
@@ -18,10 +19,12 @@ if __name__=='__main__':
             duration = float(raw_input('Enter duration of experiment in seconds:'))
         except:
             pass
-    dirr = os.path.join('data',name)
+    dirr = os.path.join(dirr,name)
     
     raw_input('Hit Enter to acquire baseline.')
     cam = Camera(0, frame_rate=30, resolution=(640,480), color_mode=BW)
+    for _ in xrange(40):
+        cam.read()
     
     #baseline
     mon = Monitor(cam, show=True, run_name=name+'_BL', duration=10., dirr=dirr)
