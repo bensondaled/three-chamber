@@ -164,8 +164,12 @@ class MouseTracker(object):
         
         timefile = os.path.join(self.trial_dir, self.trial_name+'-timestamps.json')
         self.time = json.loads(open(timefile,'r').read())
-        vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam.avi')
-        self.mov = VideoCapture(vidfile)
+        try:
+            vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam.avi')
+            self.mov = VideoCapture(vidfile)
+        except:
+            vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam0.avi')
+            self.mov = VideoCapture(vidfile)
         
         self.results = {}
         self.results['centers'] = []
@@ -284,11 +288,17 @@ class MouseTracker(object):
         except:
             #print "Acquiring background information..."
             #print os.path.join(self.background_dir, self.background_name+'-cam0.avi')
-            blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam.avi'))
+            try:
+                blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam.avi'))
+            except:
+                blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam0.avi'))
             valid, background = self.get_frame(blmov, n=-1, blur=True)
             blmov.release()
             
-            blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam.avi'))
+            try:
+                blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam.avi'))
+            except:
+                blmov = VideoCapture(os.path.join(self.background_dir, self.background_name+'-cam0.avi'))
             valid, background_image = self.get_frame(blmov, n=-1, blur=False)
             blmov.release()
             
