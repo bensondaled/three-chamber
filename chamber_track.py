@@ -79,6 +79,9 @@ class Analysis(object):
         self.trial_dir = fh[mode][TRIAL][DIR]
     def get_time(self):
         time = json.loads(open(os.path.join(self.trial_dir, '%s-timestamps.json'%self.trial_name),'r').read())
+        #for compatibility with old versions:
+        if type(time[0]) in [list, np.ndarray]:
+            time = time[0]
         return time
     def get_tracking(self):
         tracking = np.load(os.path.join(self.trial_dir,'%s_tracking.npz'%self.trial_name))
@@ -493,7 +496,7 @@ class MainFrame(object):
                 mt = MouseTracker(mouse=mouse, mode=mode, data_directory=data_dir, resample=resample, diff_thresh=diff_thresh, selection_from=select_from)
                 mt.run(show=show_live_tracking, save=save_tracking_video, tk_var_frame=(self.status2, self.frame))
                 a = Analysis(mouse, mode, data_directory=data_dir)
-                a.make_fig1()
+                #a.make_fig1()
                 if mouse not in select_from:
                     select_from += [mouse]
             except:

@@ -1,5 +1,4 @@
-
-from chamber_analyze import Analysis
+from chamber_track import Analysis
 import pylab as pl
 from matplotlib import cm as mpl_cm
 from cv2 import resize
@@ -70,20 +69,24 @@ def merge_mice(mice, datadir, sigma=1.5, norm=True, match_baseline_test_sizes=Tr
 
 if __name__ == '__main__':
     # Choose the mice
-    datadir = 'C:\\Users\\andreag\\Desktop\\chamber_examples' #backslashes must be doubled!
-    group1 = ['mouse1']
-    group2 = ['mouse3', 'mouse4']
-    mice = group1
+    datadir = 'C:\\Users\\andreag\\Documents\\METZGER\\DREADDs\\SocialChamber\\Analyzed'
+    #datadir = 'C:\\Users\\andreag\\Desktop\\chamber_examples' #backslashes must be doubled!
+    group1 = ['DREADD_JM_062614_01']
+    dreaddonly = ['DREADD_AG_061614_01', 'DREADD_AG_061614_02', 'DREADD_JM_061614_01', 'DREADD_JM_061714_01', 'DREADD_JM_061814_01', 'DREADD_JM_061814_02']
+    cocktail = ['DREADD_JM_061914_01', 'DREADD_JM_062014_01', 'DREADD_JM_062514_01', 'DREADD_JM_062614_01']
+    mice = cocktail
 
     # Parameters
     sigma = 1.5
 
-    # Process the data
+    # Process the data (no need to touch)
     data = merge_mice(mice=mice, datadir=datadir, sigma=sigma, norm=True)
 
     # Choose what to display
     bg_image = data[BASELINE][IMG]
-    to_show = data[TEST][HEAT]-data[BASELINE][HEAT]
+    #to_show = data[TEST][HEAT]-data[BASELINE][HEAT]
+    #to_show = data[TEST][HEAT]
+    to_show = data[BASELINE][HEAT]
     
     # Make the data look better (option 1)
     # to_show = np.ma.masked_where(np.abs(to_show)<np.percentile(to_show, 60), to_show)
@@ -94,5 +97,4 @@ if __name__ == '__main__':
     pl.imshow(bg_image, cmap=mpl_cm.Greys_r)
     pl.imshow(to_show , cmap=mpl_cm.jet)
     pl.colorbar()
-    pl.savefig('my_saved_image' + '.png')
-
+    pl.savefig('DREADDs_COCKTAIL_MICE_ALL_baseline' + '.png')
