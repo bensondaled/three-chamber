@@ -26,7 +26,7 @@ class Camera(object):
         self.vc.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.resolution[0])
         self.vc.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.resolution[1])
 
-        time.sleep(0.1)
+        time.sleep(0.01)
         self.vc.read()
         self.vc.read()
     def read(self):

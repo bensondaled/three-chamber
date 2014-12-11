@@ -18,23 +18,12 @@ if __name__=='__main__':
             duration = float(raw_input('Enter duration of experiment in seconds:'))
         except:
             pass
+
     dirr = os.path.join('data',name)
     
-    raw_input('Hit Enter to acquire baseline.')
-    
     #baseline
-    cam = Camera(0, frame_rate=30, resolution=(640,480), color_mode=BW)
-    mon = Monitor(cam, show=True, run_name=name+'_BL', duration=10., dirr=dirr)
+    cam = Camera(0, frame_rate=50, resolution=(640,480), color_mode=BW)
+    mon = Monitor(cam, show=True, run_name=name, duration=duration, dirr=dirr)
     mon.go()
+    cam.release()
     
-    _ = raw_input('Hit enter to start recording.')
-    
-    i = 1
-    cont = True
-    while cont!='q':
-        #test
-        cam = Camera(0, frame_rate=30, resolution=(640,480), color_mode=BW)
-        mon = Monitor(cam, show=True, run_name=name+"_%02d_"%i, duration=duration, dirr=dirr)
-        mon.go()
-        cont = raw_input('Run again? (Hit enter to run, type \'q\' + Enter to quit.)')
-        i+=1
