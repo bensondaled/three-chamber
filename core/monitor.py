@@ -47,7 +47,6 @@ class Monitor(object):
                 f.write("%s"%json.dumps(dic))
         
     def end(self):
-        self.cam.release()
         cv2.destroyAllWindows()
         if self.save_on:
             self.writer.release()

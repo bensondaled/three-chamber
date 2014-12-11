@@ -106,24 +106,23 @@ class Analysis(object):
         return cropped
     def make_fig1(self):
 
-        #leftmost = pts_l[np.argsort([p[0] for p in pts_l])][:2]
-        #rightmost = pts_r[np.argsort([p[0] for p in pts_r])][-2:]
-        #topleft = leftmost[np.argmin([p[1] for p in leftmost])]
-        #topright = rightmost[np.argmin([p[1] for p in rightmost])]
-        #theta = np.degrees(np.arctan2(topright[1]-topleft[1], topright[0]-topleft[0]))
+        leftmost = pts_l[np.argsort([p[0] for p in pts_l])][:2]
+        rightmost = pts_r[np.argsort([p[0] for p in pts_r])][-2:]
+        topleft = leftmost[np.argmin([p[1] for p in leftmost])]
+        topright = rightmost[np.argmin([p[1] for p in rightmost])]
+        theta = np.degrees(np.arctan2(topright[1]-topleft[1], topright[0]-topleft[0]))
 
-        #rot_mat = getRotationMatrix2D(center=(0,0), angle=theta, scale=1)
-        #bl_rotated = warpAffine(background_crop, M=rot_mat, dsize=np.shape(background_crop)[::-1])
-        #tr_rotated = warpAffine(track_crop, M=rot_mat, dsize=np.shape(background_crop)[::-1])
-        #plimshow(bl_rotated, cmap=mpl_cm.Greys_r)
-        #plimshow(np.ma.masked_where(tr_rotated==0.,tr_rotated), cmap=mpl_cm.jet, interpolation=None)
+        rot_mat = getRotationMatrix2D(center=(0,0), angle=theta, scale=1)
+        bl_rotated = warpAffine(background_crop, M=rot_mat, dsize=np.shape(background_crop)[::-1])
+        tr_rotated = warpAffine(track_crop, M=rot_mat, dsize=np.shape(background_crop)[::-1])
+        plimshow(bl_rotated, cmap=mpl_cm.Greys_r)
+        plimshow(np.ma.masked_where(tr_rotated==0.,tr_rotated), cmap=mpl_cm.jet, interpolation=None)
         #plsavefig(self.trial_dir+'/%s_summary-rotation.png'%self.trial_name)
-        #plimshow(background_crop, cmap=mpl_cm.Greys_r)
-        #plimshow(np.ma.masked_where(track_crop==0., track_crop), cmap=mpl_cm.jet)
-        #plsavefig(self.trial_dir+'/%s_summary.png'%self.trial_name)
-        #plclose()
-        #return (background_crop,track_crop,frames,centers)
-        pass
+        plimshow(background_crop, cmap=mpl_cm.Greys_r)
+        plimshow(np.ma.masked_where(track_crop==0., track_crop), cmap=mpl_cm.jet)
+        plsavefig(self.trial_dir+'/%s_summary.png'%self.trial_name)
+        plclose()
+        return (background_crop,track_crop,frames,centers)
 
 class MouseTracker(object):
     def __init__(self, mouse, mode,  data_directory='.', diff_thresh=100, resample=8, translation_max=100, smoothing_kernel=19, consecutive_skip_threshold=2, selection_from=[]):
@@ -193,6 +192,7 @@ class MouseTracker(object):
             pts = np.load(os.path.join(self.trial_dir, '%s_selections.npz'%self.trial_name))
             pts_l = pts['pts_l']
             pts_r = pts['pts_r']
+            pts_c = pts['pts_c']
             pts_mouse = pts['pts_mouse']
             regions_ignore = pts['regions_ignore']
         except:
@@ -264,7 +264,6 @@ class MouseTracker(object):
             np.savez(os.path.join(self.trial_dir, '%s_selections'%self.trial_name), pts_l=pts_l, pts_r=pts_r, pts_c=pts_c, pts_mouse=pts_mouse, regions_ignore=regions_ignore)
         path_l, path_r, path_c = [mpl_path.Path(pts) for pts in [pts_l,pts_r,pts_c]]
         last_center = np.round(np.mean(pts_mouse, axis=0)).astype(int)
-
         paths_ignore = [mpl_path.Path(pts) for pts in regions_ignore]
 
         rooms_mask = np.zeros(np.shape(self.background))

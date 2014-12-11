@@ -1,5 +1,5 @@
-from monitor import Monitor
-from cameras import Camera, BW, COLOR
+from core.monitor import Monitor
+from core.cameras import Camera, BW, COLOR
 import numpy as np
 import os
 import sys
@@ -25,4 +25,5 @@ if __name__=='__main__':
     cam = Camera(0, frame_rate=50, resolution=(640,480), color_mode=BW)
     mon = Monitor(cam, show=True, run_name=name, duration=duration, dirr=dirr)
     mon.go()
+    cam.release()
     

@@ -21,9 +21,9 @@ if __name__=='__main__':
     dirr = os.path.join('data',name)
     
     raw_input('Hit Enter to acquire baseline.')
+    cam = Camera(0, frame_rate=30, resolution=(640,480), color_mode=BW)
     
     #baseline
-    cam = Camera(0, frame_rate=30, resolution=(640,480), color_mode=BW)
     mon = Monitor(cam, show=True, run_name=name+'_BL', duration=10., dirr=dirr)
     mon.go()
     
@@ -33,8 +33,9 @@ if __name__=='__main__':
     cont = True
     while cont!='q':
         #test
-        cam = Camera(0, frame_rate=30, resolution=(640,480), color_mode=BW)
         mon = Monitor(cam, show=True, run_name=name+"_%02d_"%i, duration=duration, dirr=dirr)
         mon.go()
         cont = raw_input('Run again? (Hit enter to run, type \'q\' + Enter to quit.)')
         i+=1
+
+    cam.release()
