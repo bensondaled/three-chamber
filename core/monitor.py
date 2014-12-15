@@ -8,7 +8,7 @@ cv = cv2.cv
 
 
 class Monitor(object):
-    def __init__(self, camera=None, show=True, save_on=True, run_name='', dirr='', duration=99999999999.,extra=None):
+    def __init__(self, camera=None, show=True, save_on=True, run_name='', dirr='', duration=99999999999.,extra={}):
         if type(camera) != Camera:
             raise Exception('Camera object is not a valid camera!')
         self.cam = camera
