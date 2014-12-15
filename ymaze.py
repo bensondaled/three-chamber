@@ -20,6 +20,10 @@ if __name__=='__main__':
         except:
             pass
     dirr = os.path.join(dirr,name)
+
+    side = None
+    while side not in ['l','r']:
+        side = raw_input('Enter correct side (l/r):').lower()
     
     raw_input('Hit Enter to acquire baseline.')
     cam = Camera(0, frame_rate=30, resolution=(640,480), color_mode=BW)
@@ -36,7 +40,7 @@ if __name__=='__main__':
     cont = True
     while cont!='q':
         #test
-        mon = Monitor(cam, show=True, run_name=name+"_%02d_"%i, duration=duration, dirr=dirr)
+        mon = Monitor(cam, show=True, run_name=name+"_%02d_"%i, duration=duration, dirr=dirr, extra={'side':side})
         mon.go()
         cont = raw_input('Run again? (Hit enter to run, type \'q\' + Enter to quit.)')
         i+=1

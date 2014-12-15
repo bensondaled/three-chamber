@@ -8,7 +8,7 @@ cv = cv2.cv
 
 
 class Monitor(object):
-    def __init__(self, camera=None, show=True, save_on=True, run_name='', dirr='', duration=99999999999.):
+    def __init__(self, camera=None, show=True, save_on=True, run_name='', dirr='', duration=99999999999.,extra=None):
         if type(camera) != Camera:
             raise Exception('Camera object is not a valid camera!')
         self.cam = camera
@@ -41,6 +41,7 @@ class Monitor(object):
             dic['run_name'] = self.run_name
             dic['run_time'] = self.run_time
             dic['cameras'] = self.cam.metadata()
+            dic.update(extra)
             
             meta_name = os.path.join(self.dirr, self.run_name+'-metadata.json')
             with open(meta_name, 'w') as f:
