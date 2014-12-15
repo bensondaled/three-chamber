@@ -123,11 +123,11 @@ class MouseTracker(object):
         
         self.fh = FileHandler(self.data_dir, self.mouse, self.n)
 
-        self.load_background()
+        self.framei = 0
         self.load_time()
+        self.load_background()
         self.height, self.width = self.background.shape
         self.mov = VideoCapture(self.fh.get_path(self.fh.TRIAL, self.fh.MOV))
-        self.framei = 0
         #self.get_frame(self.mov,n=40) #MUST ADJUST TIME IF USING THIS
         self.load_pts()
         self.make_rooms()
@@ -198,37 +198,73 @@ class MouseTracker(object):
         self.man_update(pts_dict)
 
         np.savez(self.fh.make_path('pts.npz', mode=self.fh.BL), **pts_dict)
-    def verify_pts(self):
-        if len(self.pts) != 15:
+    def verify_pts(self, add_to_all=True):
+        if add_to_all:
+            self.all_possible_pts += list(self.pts)
+        if len(self.pts) < 15:
             return False
-
-        self.pts_c = np.mean(self.pts,axis=0)
-        dists = np.array([dist(self.pts_c, p) for p in self.pts])
-        c3i = np.argsort(dists)[:3]
-        m6i = np.argsort(dists)[3:9]
-        o6i = np.argsort(dists)[9:]
-
-        if np.std(dists[c3i]) > 0.5 or  np.std(dists[m6i]) > 0.5 or np.std(dists[o6i]) > 1.7:
-            return False
-       
-        self.c3i = c3i
-        self.m6i = m6i
-        self.o6i = o6i
-        return True
+        elif len(self.pts) > 15:
+            totryi = [np.random.choice(np.arange(len(self.pts)),15,replace=False) for _ in xrange(1000)]
+        elif len(self.pts) == 15:
+            totryi = range(15)
         
+        for ptsi in totryi:
+            pts = self.pts[ptsi]
+            self.pts_c = np.mean(pts,axis=0)
+            dists = np.array([dist(self.pts_c, p) for p in pts])
+            c3i = np.argsort(dists)[:3]
+            m6i = np.argsort(dists)[3:9]
+            o6i = np.argsort(dists)[9:]
+
+            if np.std(dists[c3i]) < 0.5 and np.std(dists[m6i]) < 0.5 or np.std(dists[o6i]) < 1.7:
+                self.c3i = c3i
+                self.m6i = m6i
+                self.o6i = o6i
+                self.pts = pts
+                return True
+           
+        return False
+    def permute_pts(self):
+        apts = np.array(self.all_possible_pts)
+        unpts = []
+        for pt in apts:
+            if len(unpts)==0:
+                unpts.append(pt)
+            else:
+                dists = np.sqrt(np.sum((pt-np.array(unpts))**2,axis=1))
+                mindist = np.min(dists)
+                if mindist > 5:
+                    unpts.append(pt)
+        unpts = np.array(unpts)
+        if len(unpts)<15:
+            return False
+        for _ in xrange(10000):
+            testpts = np.random.choice(np.arange(len(unpts)),15, replace=False)
+            testpts = unpts[testpts]
+            self.pts = testpts
+            ##
+            #x = self.background.copy()
+            #for pt in self.pts:
+            #    cv2.circle(x, tuple(pt), 4, (255,255,255), thickness=3)
+            #pl.figure(2);pl.imshow(x)
+            ##
+            if self.verify_pts(add_to_all=False):
+                return True
+        return False
     def load_pts(self):
         try:
             self.man_update(np.load(self.fh.make_path('pts.npz', mode=self.fh.BL)))
         except:
+            self.all_possible_pts = []
             invalid = True
             attempts = 0
             while invalid:
                 img = self.background_image.copy()
                 lp_ksizes = [5,7,9,11,13,15]
                 lp_ksize = rand.choice(lp_ksizes)
-                sbd_areas = [range(20,26), range(48,54)]
+                sbd_areas = [range(5,26), range(48,60)]
                 sbd_area = [rand.choice(sbd_areas[0]), rand.choice(sbd_areas[1])]
-                sbd_circs = [np.arange(0.22,0.35), range(1000,1001)]
+                sbd_circs = [np.arange(0.19,0.35), range(1000,1001)]
                 sbd_circ = [rand.choice(sbd_circs[0]), rand.choice(sbd_circs[1])]
                 subtr_rowmeans = rand.choice([True,False])
 
@@ -256,8 +292,12 @@ class MouseTracker(object):
                 self.pts = pts
                 invalid = not self.verify_pts()
                 attempts += 1
-                if attempts > 2000:
-                    raise Exception('Pts cannot be found.')
+                if attempts > 500:
+                    success = self.permute_pts()
+                    if not success:
+                        raise Exception('Pts cannot be found.')
+                    else:
+                        break
             self.classify_pts()
     def load_time(self):
         with open(self.fh.get_path(self.fh.TRIAL,self.fh.TIME),'r') as f:
@@ -356,6 +396,7 @@ class MouseTracker(object):
             writer.open(self.fh.make_path('tracking.avi'),self.fourcc,round(self.fs),frameSize=fsize,isColor=True)
         
         #run
+        self.framei = 0
         self.pos = []
         self.t = []
         self.chamber = []
@@ -513,8 +554,8 @@ if __name__=='__main__':
 
     elif mode == 'nongui':
         data_dir = '/Users/Benson/Desktop/data'
-        mouse = '12_09_2014_black6_blackbacground_coveredplatform'
-        mouse = 'white1'
+        mouse = 'black1'
+        mouse = 'Black6_Y_1_acq1'
 
-        mt = MouseTracker(mouse=mouse, n=3, data_dir=data_dir, diff_thresh=30)
+        mt = MouseTracker(mouse=mouse, n=2, data_dir=data_dir, diff_thresh=65)
         mt.run(show=True, save=False)
