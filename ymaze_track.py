@@ -204,9 +204,14 @@ class MouseTracker(object):
         if len(self.pts) < 15:
             return False
         elif len(self.pts) > 15:
-            totryi = [np.random.choice(np.arange(len(self.pts)),15,replace=False) for _ in xrange(1000)]
+            allperms = np.array(list(it.combinations(range(len(self.pts)), 15)))
+            if len(allperms)>200:
+                totryi = np.random.choice(range(len(allperms)),200,replace=False)
+                totryi = allperms[totryi]
+            else:
+                totryi = allperms
         elif len(self.pts) == 15:
-            totryi = range(15)
+            totryi = [range(15)]
         
         for ptsi in totryi:
             pts = self.pts[ptsi]
@@ -216,7 +221,31 @@ class MouseTracker(object):
             m6i = np.argsort(dists)[3:9]
             o6i = np.argsort(dists)[9:]
 
-            if np.std(dists[c3i]) < 0.5 and np.std(dists[m6i]) < 0.5 or np.std(dists[o6i]) < 1.7:
+            good = True
+            
+            #test dists from center
+            if np.std(dists[c3i]) > 0.8 or np.std(dists[m6i]) > 0.8 or np.std(dists[o6i]) > 1.9:
+                good = False
+            #x = self.background.copy()
+            #for pt in pts:
+            #    cv2.circle(x, tuple(pt), 4, (255,255,255), thickness=3)
+            #pl.figure(2);pl.imshow(x)
+            #raw_input()
+            ##
+            
+            #test outer dists from each other
+            o6 = pts[o6i]
+            omindists = np.array([np.min(np.array([dist(p,pp) for p in o6])) for pp in o6])
+            if np.std(omindists) > 0.5:
+                good = False
+           
+           #test middle dists from each other
+            m6 = pts[m6i]
+            mmindists = np.array([np.min(np.array([dist(p,pp) for p in m6])) for pp in m6])
+            if np.std(mmindists) > 0.5:
+                good = False
+            
+            if good:
                 self.c3i = c3i
                 self.m6i = m6i
                 self.o6i = o6i
@@ -225,6 +254,7 @@ class MouseTracker(object):
            
         return False
     def permute_pts(self):
+        #NOT IN USE
         apts = np.array(self.all_possible_pts)
         unpts = []
         for pt in apts:
@@ -259,12 +289,14 @@ class MouseTracker(object):
             invalid = True
             attempts = 0
             while invalid:
+                if attempts > 200:
+                    raise Exception('Pts cannot be found.')
                 img = self.background_image.copy()
-                lp_ksizes = [5,7,9,11,13,15]
+                lp_ksizes = [13,15,17,19,21,23,25] #from 5-15 before
                 lp_ksize = rand.choice(lp_ksizes)
-                sbd_areas = [range(5,26), range(48,60)]
+                sbd_areas = [range(10,20), range(46,55)] #8,26 46,55
                 sbd_area = [rand.choice(sbd_areas[0]), rand.choice(sbd_areas[1])]
-                sbd_circs = [np.arange(0.19,0.35), range(1000,1001)]
+                sbd_circs = [np.arange(0.19,0.35), range(1000,1001)]#0.19,0.35 1000
                 sbd_circ = [rand.choice(sbd_circs[0]), rand.choice(sbd_circs[1])]
                 subtr_rowmeans = rand.choice([True,False])
 
@@ -288,16 +320,10 @@ class MouseTracker(object):
                 x = img.copy()
                 for pt in pts:
                     cv2.circle(x, tuple(pt), 4, (255,255,255), thickness=3)
-                #pl.figure(2);pl.imshow(x)
+                #pl.figure(2);pl.imshow(x);raw_input()
                 self.pts = pts
                 invalid = not self.verify_pts()
                 attempts += 1
-                if attempts > 500:
-                    success = self.permute_pts()
-                    if not success:
-                        raise Exception('Pts cannot be found.')
-                    else:
-                        break
             self.classify_pts()
     def load_time(self):
         with open(self.fh.get_path(self.fh.TRIAL,self.fh.TIME),'r') as f:
@@ -553,9 +579,9 @@ if __name__=='__main__':
         root.mainloop()
 
     elif mode == 'nongui':
-        data_dir = '/Users/Benson/Desktop/data'
-        mouse = 'black1'
+        data_dir = '/Users/Benson/Desktop/'
+        mouse = '12_09_2014_BL6_blackbackground'
         mouse = 'Black6_Y_1_acq1'
 
-        mt = MouseTracker(mouse=mouse, n=2, data_dir=data_dir, diff_thresh=65)
+        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=65)
         mt.run(show=True, save=False)
