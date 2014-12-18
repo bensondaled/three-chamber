@@ -133,7 +133,7 @@ class MouseTracker(object):
         self.make_rooms()
 
     def end(self):
-        self.results = dict(pos=self.pos, time=np.array(self.t)-self.t[0], chamber=self.chamber, guess=self.guess, heat=self.heat)
+        self.results = dict(pos=self.pos, time=np.array(self.t)-self.t[0], guess=self.guess, heat=self.heat, contour=self.contour)
         np.savez(self.fh.make_path('tracking.npz'), **self.results)
         savemat(self.fh.make_path('tracking.mat'), self.results)
         
@@ -391,7 +391,7 @@ class MouseTracker(object):
     def choose_best_contour(self, possible):
         chosen = possible[np.argmax([contourArea(c) for c in possible])]   
         center = contour_center(chosen,asint=True)[0]
-        return center
+        return chosen,center
     def label_frame(self, frame, center):
         showimg = np.copy(frame).astype(np.uint8)
         if self.path_x.contains_point(center):
@@ -425,24 +425,27 @@ class MouseTracker(object):
         self.framei = 0
         self.pos = []
         self.t = []
-        self.chamber = []
         self.guess = []
+        self.contour = []
         self.heat = np.zeros((self.height,self.width))
         consecutive_skips = 0
         self.last_center = np.mean(self.pts[np.array([self.xori, self.xoli])],axis=0).astype(int)
+        self.last_contour = np.array([self.last_center])
         valid,frame,ts = self.get_frame(self.mov,skip=self.resample-1)
         while valid:
             possible = self.find_possible_contours(frame,consecutive_skips)
             
             if len(possible) == 0:
                 center = self.last_center
+                contour = self.last_contour
                 self.guess.append(True)
                 consecutive_skips+=1
             else:
-                center = self.choose_best_contour(possible)
+                contour,center = self.choose_best_contour(possible)
                 self.guess.append(False)
                 consecutive_skips = 0
             self.pos.append(center)
+            self.contour.append(contour)
             self.t.append(ts)
             self.heat[center[1],center[0]] += 1
             
@@ -456,6 +459,7 @@ class MouseTracker(object):
                 writer.write(save_frame)
              
             self.last_center = center
+            self.last_contour = contour
             valid,frame,ts = self.get_frame(self.mov,skip=self.resample-1)
         
             if tk_var_frame != None:
@@ -581,7 +585,7 @@ if __name__=='__main__':
     elif mode == 'nongui':
         data_dir = '/Users/Benson/Desktop/'
         mouse = '12_09_2014_BL6_blackbackground'
-        mouse = 'Black6_Y_1_acq1'
+        mouse = 'DREADD1_Y_hab'
 
-        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=65)
-        mt.run(show=True, save=False)
+        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=40)
+        mt.run(show=False, save=False)
