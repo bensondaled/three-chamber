@@ -135,7 +135,7 @@ class MouseTracker(object):
     def end(self):
         self.results = dict(pos=self.pos, time=np.array(self.t)-self.t[0], guess=self.guess, heat=self.heat, contour=self.contour)
         np.savez(self.fh.make_path('tracking.npz'), **self.results)
-        savemat(self.fh.make_path('tracking.mat'), self.results)
+        #savemat(self.fh.make_path('tracking.mat'), self.results)
         
         self.mov.release()
         destroyAllWindows()
@@ -623,8 +623,7 @@ if __name__=='__main__':
 
     elif mode == 'nongui':
         data_dir = '/Users/Benson/Desktop/'
-        mouse = '12_09_2014_BL6_blackbackground'
-        mouse = 'DREADD_GR3_M1_acq1'
+        mouse = 'DREADD_GR3_M1_revD1_1'
 
-        mt = MouseTracker(mouse=mouse, n=5, data_dir=data_dir, diff_thresh=40)
+        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=40)
         mt.run(show=True, save=False)

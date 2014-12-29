@@ -29,14 +29,16 @@ class Marker(object):
         self.make_rooms()
         self.load_tracking()
 
-        self.verify_tracking()
     def verify_tracking(self):
-        print 'implement this!'
+        good = [[X,C],[Y,C],[Z,C],[C,X],[C,Y],[C,Z],[Y,YEND],[YEND,Y],[Z,ZEND],[ZEND,Z]]
+        for tr in self.transitions:
+            if [tr['from'],tr['to']] not in good:
+                raise Exception('Tracking does not make sense.')
 
     def end(self):
-        self.results = dict(score=self.score, transitions=self.transitions, room_key=self.room_key)
+        self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance)
         np.savez(self.fh.make_path('behaviour.npz'), **self.results)
-        savemat(self.fh.make_path('behaviour.mat'), self.results)
+        #savemat(self.fh.make_path('behaviour.mat',mode=0), self.results)
     def man_update(self, d):
         for k,v in d.items():
             setattr(self,k,v)
@@ -122,13 +124,18 @@ class Marker(object):
         elif self.path_z.contains_point(pos):
             chamber = Z
         return chamber
+    def total_distance(self, arr):
+        return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
     def run(self):
         
         #run
+        self.distance = self.total_distance(self.tracking['pos'])
         self.chamber = np.array(map(self.get_chamber, self.tracking['pos']))
         durations = self.tracking['time'][1:] - self.tracking['time'][0]
         moved = self.chamber[1:]-self.chamber[:-1]
         self.transitions = np.array(zip(durations[moved != 0], self.chamber[moved!=0], self.chamber[1:][moved != 0]), dtype=[('time',float),('from',int),('to',int)]) #time, chamber exited,  chamber entered
+        self.verify_tracking()
+
         self.score = ''
         for t in self.transitions:
             if self.score == 'null':
@@ -141,13 +148,17 @@ class Marker(object):
             if t['to'] == self.incorrect:
                 self.score = 'incorrect'
                 break
+        if self.score == 'correct':
+            self.time_to_correct = t['time']
+        else:
+            self.time_to_correct = -1
 
         self.end()
 
 if __name__ == '__main__':
     data_dir = '/Users/Benson/Desktop/'
-    mouse = '12_09_2014_BL6_blackbackground'
     mouse = 'DREADD_GR3_M1_acq1'
+    mouse = 'DREADD_GR3_M1_revD1_1'
 
-    m = Marker(mouse=mouse, n=5, data_dir=data_dir)
+    m = Marker(mouse=mouse, n=2, data_dir=data_dir)
     m.run()
