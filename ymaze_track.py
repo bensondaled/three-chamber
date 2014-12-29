@@ -98,7 +98,7 @@ class FileHandler(object):
         return pth
 
 class MouseTracker(object):
-    def __init__(self, mouse, n=1, data_dir='.', diff_thresh=80, resample=3, translation_max=100, smoothing_kernel=19, consecutive_skip_threshold=2, selection_from=[]):
+    def __init__(self, mouse, n=1, data_dir='.', diff_thresh=80, resample=3, translation_max=150, smoothing_kernel=19, consecutive_skip_threshold=2, selection_from=[]):
         self.mouse = mouse
         self.n = n
         self.data_dir = data_dir
@@ -146,8 +146,11 @@ class MouseTracker(object):
         self.path_x = mpl_path.Path(self.pts[np.array([self.xmli,self.xoli,self.xori,self.xmri])])
         self.path_y = mpl_path.Path(self.pts[np.array([self.ymli,self.yoli,self.yori,self.ymri])])
         self.path_z = mpl_path.Path(self.pts[np.array([self.zmli,self.zoli,self.zori,self.zmri])])
+
+
         self.border_mask = np.zeros((self.height,self.width))
-        pth = mpl_path.Path(self.pts[np.array([self.yoli,self.yori,self.ymri,self.ycri,self.zmli,self.zoli,self.zori,self.zmri,self.zcri,self.xmli,self.xoli,self.xori,self.xmri,self.xcri,self.ymli])])
+        pthpts = self.pts[np.array([self.yoli_adj,self.yori_adj,self.ymri,self.ycri,self.zmli,self.zoli_adj,self.zori_adj,self.zmri,self.zcri,self.xmli,self.xoli_adj,self.xori_adj,self.xmri,self.xcri,self.ymli])]
+        pth = mpl_path.Path(pthpts)
         for iy in xrange(self.border_mask.shape[0]):
             for ix in xrange(self.border_mask.shape[1]):
                 self.border_mask[iy,ix] = pth.contains_point([ix,iy])
@@ -193,8 +196,44 @@ class MouseTracker(object):
         yori = nn(ymri, 1, ex=cm9)[0]
         zoli = nn(zmli, 1, ex=cm9)[0]
         zori = nn(zmri, 1, ex=cm9)[0]
+        
+        #accounting for inner wall reflections:
+        zol,zml = np.array([self.pts[zoli],self.pts[zmli]]).astype(np.int32)
+        dd = np.sqrt(np.sum((zol-zml)**2))
+        cup_dd = 0.80*dd
+        #z cup:
+        zol,zml = np.array([self.pts[zoli],self.pts[zmli]]).astype(np.int32)
+        d_zl = zol-zml
+        theta_zl = np.arctan2(*d_zl)
+        l2 = zml + cup_dd * np.array([np.sin(theta_zl),np.cos(theta_zl)])
+        zor,zmr = np.array([self.pts[zori],self.pts[zmri]]).astype(np.int32)
+        d_zr = zor-zmr
+        theta_zr = np.arctan2(*d_zr)
+        r2 = zmr + cup_dd * np.array([np.sin(theta_zr),np.cos(theta_zr)])
+        zr2,zl2 = r2,l2
+        #y cup:
+        yol,yml = np.array([self.pts[yoli],self.pts[ymli]]).astype(np.int32)
+        d_yl = yol-yml
+        theta_yl = np.arctan2(*d_yl)
+        l2 = yml + cup_dd * np.array([np.sin(theta_yl),np.cos(theta_yl)])
+        yor,ymr = np.array([self.pts[yori],self.pts[ymri]]).astype(np.int32)
+        d_yr = yor-ymr
+        theta_yr = np.arctan2(*d_yr)
+        r2 = ymr + cup_dd * np.array([np.sin(theta_yr),np.cos(theta_yr)])
+        yr2,yl2 = r2,l2
+        #x cup:
+        xol,xml = np.array([self.pts[xoli],self.pts[xmli]]).astype(np.int32)
+        d_xl = xol-xml
+        theta_xl = np.arctan2(*d_xl)
+        l2 = xml + cup_dd * np.array([np.sin(theta_xl),np.cos(theta_xl)])
+        xor,xmr = np.array([self.pts[xori],self.pts[xmri]]).astype(np.int32)
+        d_xr = xor-xmr
+        theta_xr = np.arctan2(*d_xr)
+        r2 = xmr + cup_dd * np.array([np.sin(theta_xr),np.cos(theta_xr)])
+        xr2,xl2 = r2,l2
+        self.pts = np.rint(np.concatenate((self.pts, [zr2,zl2,yr2,yl2,xr2,xl2])))
 
-        pts_dict = dict(pts=self.pts,xcri=xcri,ycli=ycli,ycri=ycri,zcli=zcli,zcri=zcri,xcli=xcli,xmri=xmri,ymli=ymli,ymri=ymri,zmli=zmli,xmli=xmli,zmri=zmri,xoli=xoli,xori=xori,yoli=yoli,yori=yori,zoli=zoli,zori=zori)
+        pts_dict = dict(pts=self.pts,xcri=xcri,ycli=ycli,ycri=ycri,zcli=zcli,zcri=zcri,xcli=xcli,xmri=xmri,ymli=ymli,ymri=ymri,zmli=zmli,xmli=xmli,zmri=zmri,xoli=xoli,xori=xori,yoli=yoli,yori=yori,zoli=zoli,zori=zori,zori_adj=-6,zoli_adj=-5,yori_adj=-4,yoli_adj=-3,xori_adj=-2,xoli_adj=-1)
         self.man_update(pts_dict)
 
         np.savez(self.fh.make_path('pts.npz', mode=self.fh.BL), **pts_dict)
@@ -224,7 +263,7 @@ class MouseTracker(object):
             good = True
             
             #test dists from center
-            if np.std(dists[c3i]) > 0.8 or np.std(dists[m6i]) > 0.8 or np.std(dists[o6i]) > 1.9:
+            if np.std(dists[c3i]) > 0.82 or np.std(dists[m6i]) > 0.82 or np.std(dists[o6i]) > 2.0:
                 good = False
             #x = self.background.copy()
             #for pt in pts:
@@ -236,13 +275,13 @@ class MouseTracker(object):
             #test outer dists from each other
             o6 = pts[o6i]
             omindists = np.array([np.min(np.array([dist(p,pp) for p in o6])) for pp in o6])
-            if np.std(omindists) > 0.5:
+            if np.std(omindists) > 0.6:
                 good = False
            
            #test middle dists from each other
             m6 = pts[m6i]
             mmindists = np.array([np.min(np.array([dist(p,pp) for p in m6])) for pp in m6])
-            if np.std(mmindists) > 0.5:
+            if np.std(mmindists) > 0.6:
                 good = False
             
             if good:
@@ -289,7 +328,7 @@ class MouseTracker(object):
             invalid = True
             attempts = 0
             while invalid:
-                if attempts > 200:
+                if attempts > 500:
                     raise Exception('Pts cannot be found.')
                 img = self.background_image.copy()
                 lp_ksizes = [13,15,17,19,21,23,25] #from 5-15 before
@@ -585,7 +624,7 @@ if __name__=='__main__':
     elif mode == 'nongui':
         data_dir = '/Users/Benson/Desktop/'
         mouse = '12_09_2014_BL6_blackbackground'
-        mouse = 'DREADD1_Y_hab'
+        mouse = 'DREADD_GR3_M1_acq1'
 
-        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=40)
-        mt.run(show=False, save=False)
+        mt = MouseTracker(mouse=mouse, n=5, data_dir=data_dir, diff_thresh=40)
+        mt.run(show=True, save=False)

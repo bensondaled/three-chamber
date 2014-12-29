@@ -86,7 +86,10 @@ class Marker(object):
         self.Ts = np.mean(self.time[1:]-self.time[:-1])
         self.fs = 1/self.Ts
     def load_tracking(self):
-        self.tracking = np.load(self.fh.make_path('tracking.npz'))
+        try:
+            self.tracking = np.load(self.fh.make_path('tracking.npz'))
+        except:
+            raise Exception('It appears tracking has not yet been run!')
     def load_metadata(self):
         with open(self.fh.get_path(self.fh.TRIAL,self.fh.DATA),'r') as f:
             self.metadata = json.loads(f.read())
@@ -133,7 +136,7 @@ class Marker(object):
                     self.score = 'correct'
                 break
             if t['to'] == self.correct:
-                self.score == 'null'
+                self.score = 'null'
                 continue
             if t['to'] == self.incorrect:
                 self.score = 'incorrect'
@@ -144,7 +147,7 @@ class Marker(object):
 if __name__ == '__main__':
     data_dir = '/Users/Benson/Desktop/'
     mouse = '12_09_2014_BL6_blackbackground'
-    mouse = 'DREADD1_Y_hab'
+    mouse = 'DREADD_GR3_M1_acq1'
 
-    m = Marker(mouse=mouse, n=1, data_dir=data_dir)
+    m = Marker(mouse=mouse, n=5, data_dir=data_dir)
     m.run()
