@@ -133,9 +133,9 @@ class MouseTracker(object):
         self.make_rooms()
 
     def end(self):
-        self.results = dict(pos=self.pos, time=np.array(self.t)-self.t[0], guess=self.guess, heat=self.heat, contour=self.contour)
+        self.results = dict(pos=self.pos, time=np.array(self.t)-self.t[0], guess=self.guess, heat=self.heat, contour=self.contour, pct_xadj=self.pct_xadj)
         np.savez(self.fh.make_path('tracking.npz'), **self.results)
-        savemat(self.fh.make_path('tracking.mat'), self.results)
+        #savemat(self.fh.make_path('tracking.mat'), self.results)
         
         self.mov.release()
         destroyAllWindows()
@@ -147,6 +147,13 @@ class MouseTracker(object):
         self.path_y = mpl_path.Path(self.pts[np.array([self.ymli,self.yoli,self.yori,self.ymri])])
         self.path_z = mpl_path.Path(self.pts[np.array([self.zmli,self.zoli,self.zori,self.zmri])])
 
+        #experimental: hand in frame on x room
+        self.path_x_adj = mpl_path.Path(self.pts[np.array([self.xoli,self.xoli_adj,self.xori_adj,self.xori])])
+        self.xadj_mask = np.zeros((self.height,self.width))
+        for iy in xrange(self.xadj_mask.shape[0]):
+            for ix in xrange(self.xadj_mask.shape[1]):
+                self.xadj_mask[iy,ix] = self.path_x_adj.contains_point([ix,iy])
+        self.xadj_idxs = np.squeeze(np.argwhere(self.xadj_mask==True))
 
         self.border_mask = np.zeros((self.height,self.width))
         pthpts = self.pts[np.array([self.yoli_adj,self.yori_adj,self.ymri,self.ycri,self.zmli,self.zoli_adj,self.zori_adj,self.zmri,self.zcri,self.xmli,self.xoli_adj,self.xori_adj,self.xmri,self.xcri,self.ymli])]
@@ -417,6 +424,7 @@ class MouseTracker(object):
     def find_possible_contours(self, frame, consecutive_skips):
         self.diff = absdiff(frame,self.background)
         _, self.diff = threshold(self.diff, self.diff_thresh, 1, THRESH_BINARY)
+        diff_raw = self.diff.copy()
         self.diff = self.diff*self.border_mask
         edges = Canny(self.diff.astype(np.uint8), self.cth1, self.cth2)
         contours, hier = findContours(edges, RETR_EXTERNAL, CHAIN_APPROX_TC89_L1)
@@ -426,7 +434,7 @@ class MouseTracker(object):
             possible = contours
         else:
             possible = [c for c in contours if dist(contour_center(c),self.last_center)<self.translation_max]
-        return possible
+        return possible, diff_raw
     def choose_best_contour(self, possible):
         chosen = possible[np.argmax([contourArea(c) for c in possible])]   
         center = contour_center(chosen,asint=True)[0]
@@ -466,13 +474,15 @@ class MouseTracker(object):
         self.t = []
         self.guess = []
         self.contour = []
+        self.pct_xadj = []
         self.heat = np.zeros((self.height,self.width))
         consecutive_skips = 0
         self.last_center = np.mean(self.pts[np.array([self.xori, self.xoli])],axis=0).astype(int)
         self.last_contour = np.array([self.last_center])
         valid,frame,ts = self.get_frame(self.mov,skip=self.resample-1)
         while valid:
-            possible = self.find_possible_contours(frame,consecutive_skips)
+            possible,diff_raw = self.find_possible_contours(frame,consecutive_skips)
+            self.pct_xadj.append(np.mean( diff_raw[self.xadj_idxs[:,0],self.xadj_idxs[:,1]]))
             
             if len(possible) == 0:
                 center = self.last_center
