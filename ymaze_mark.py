@@ -36,7 +36,7 @@ class Marker(object):
                 raise Exception('Tracking does not make sense.')
 
     def end(self):
-        self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance)
+        self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time)
         np.savez(self.fh.make_path('behaviour.npz'), **self.results)
         #savemat(self.fh.make_path('behaviour.mat',mode=0), self.results)
     def man_update(self, d):
@@ -127,11 +127,19 @@ class Marker(object):
     def total_distance(self, arr):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
     def run(self):
+        #correct for proper start time:
+        for idx,p in enumerate(self.tracking['pct_xadj'][:20]):
+            if p<0.2:
+                break
+        start_idx = idx
+        self.start_time = self.tracking['time'][start_idx]
+        time = self.tracking['time'][start_idx:]
+        pos = self.tracking['pos'][start_idx:]
         
         #run
-        self.distance = self.total_distance(self.tracking['pos'])
-        self.chamber = np.array(map(self.get_chamber, self.tracking['pos']))
-        durations = self.tracking['time'][1:] - self.tracking['time'][0]
+        self.distance = self.total_distance(pos)
+        self.chamber = np.array(map(self.get_chamber, pos))
+        durations = time[1:] - time[0]
         moved = self.chamber[1:]-self.chamber[:-1]
         self.transitions = np.array(zip(durations[moved != 0], self.chamber[moved!=0], self.chamber[1:][moved != 0]), dtype=[('time',float),('from',int),('to',int)]) #time, chamber exited,  chamber entered
         self.verify_tracking()
@@ -160,5 +168,5 @@ if __name__ == '__main__':
     mouse = 'DREADD_GR3_M1_acq1'
     mouse = 'DREADD_GR3_M1_revD1_1'
 
-    m = Marker(mouse=mouse, n=2, data_dir=data_dir)
+    m = Marker(mouse=mouse, n=1, data_dir=data_dir)
     m.run()
