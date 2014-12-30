@@ -72,14 +72,16 @@ class FileHandler(object):
             self.contents = os.listdir(self.dirr)
         except:
             print "File name handling failed."
-    def get_path(self, blm, mode):
+    def get_path(self, blm, mode, n=None):
         #mode is movie/timestamps/metadata
         #n is trial number, 0 refers to baseline
+        if n == None:
+            n = self.n
         filename = self.mouse
         if blm == self.BL:
             filename += '_BL'
         elif blm == self.TRIAL:
-            filename += "_%02d_"%(self.n)
+            filename += "_%02d_"%(n)
         if mode == self.MOV:
             filename += '-cam.avi'
         elif mode == self.TIME:
@@ -96,6 +98,14 @@ class FileHandler(object):
             filename += "_%02d_"%(self.n)
         pth = pjoin(self.dirr, filename+st)
         return pth
+    def get_n_trials(self):
+        i = 1
+        exists = True
+        while exists:
+            if not os.path.exists(self.get_path(self.TRIAL,self.MOV,n=i)):
+                break
+            i+=1
+        return i-1
 
 class MouseTracker(object):
     def __init__(self, mouse, n=1, data_dir='.', diff_thresh=80, resample=3, translation_max=150, smoothing_kernel=19, consecutive_skip_threshold=2, selection_from=[]):
