@@ -137,7 +137,7 @@ class Marker(object):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
     def run(self):
         #correct for proper start time:
-        for idx,p in enumerate(self.tracking['pct_xadj'][:20]):
+        for idx,p in enumerate(self.tracking['pct_xadj'][:30]):
             if p<0.2:
                 break
         start_idx = idx

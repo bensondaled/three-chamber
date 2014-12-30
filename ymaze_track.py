@@ -463,10 +463,10 @@ class MouseTracker(object):
         for pt in self.pts.astype(int):
             circle(showimg, tuple(pt), radius=4, thickness=3, color=(0,0,0))
         return showimg
-    def show_frame(self, frame):
+    def show_frame(self, frame, wait=1):
         cv2imshow('Tracking',frame)
-        waitKey(1)
-    def run(self, show=False, save=False, tk_var_frame=None):
+        waitKey(wait)
+    def run(self, show=False, save=False, tk_var_frame=None, wait=1):
         
         #interfaces
         if show or save:
@@ -513,7 +513,7 @@ class MouseTracker(object):
                 save_frame[:,:self.width, :] = cvtColor(lframe.astype(np.float32), CV_GRAY2RGB)
                 save_frame[:,self.width:, :] = cvtColor((self.diff*255).astype(np.float32), CV_GRAY2RGB)
             if show:
-                self.show_frame(save_frame)
+                self.show_frame(save_frame, wait=wait)
             if save:
                 writer.write(save_frame)
              
