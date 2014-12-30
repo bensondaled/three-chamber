@@ -101,6 +101,15 @@ class Marker(object):
             self.side = None
             while self.side not in ['l','r']:
                 self.side = raw_input('Correct side was not indicated in this dataset. Please enter correct side (l/r):').lower()
+            self.metadata['side'] = self.side
+            try:
+                with open(self.fh.get_path(self.fh.TRIAL,self.fh.DATA),'w') as f:
+                    towrite = json.dumps(self.metadata)
+                    f.write("%s"%towrite)
+            except: #backup in an attempt to never lose original data
+                print self.metadata
+                with open('crash_log.txt','a') as f:
+                    f.write("%s"%str(self.metadata))
         self.correct = [Y,Z][['l','r'].index(self.side)]
         self.incorrect = [Z,Y][['l','r'].index(self.side)]
     def load_background(self):
