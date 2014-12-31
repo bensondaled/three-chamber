@@ -280,7 +280,7 @@ class MouseTracker(object):
             good = True
             
             #test dists from center
-            if np.std(dists[c3i]) > 0.9 or np.std(dists[m6i]) > 0.9 or np.std(dists[o6i]) > 2.4:
+            if np.std(dists[c3i]) > 1. or np.std(dists[m6i]) > 1. or np.std(dists[o6i]) > 2.5:
                 good = False
             #x = self.background.copy()
             #for pt in pts:
