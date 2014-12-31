@@ -5,7 +5,7 @@ import os
 import csv
 import numpy as np
 
-mode = 'collect' #group single collect
+mode = 'group' #group single collect
 
 if mode == 'group':
     data_dir = 'Y:\\abadura\\Y-Maze\\Black6'
@@ -17,7 +17,7 @@ if mode == 'group':
             fh = FileHandler(data_dir, mouse, n=1)
             for tr in xrange(fh.get_n_trials()):
                 #mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=40)
-                #mt.run(show=True, save=False)
+                #mt.run(show=False, save=False)
                 m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir)
                 m.run()
         except:
@@ -44,7 +44,7 @@ elif mode == 'collect':
         for tr in xrange(fh.get_n_trials()):
             fhm = FileHandler(data_dir, mouse, n=tr+1)
             data = np.load(fhm.make_path('behaviour.npz'))
-            dic = dict(mouse=mouse, score=data['score'], time_to_correct=data['time_to_correct'], distance=data['distance'])
+            dic = dict(mouse=mouse, n=tr+1, score=data['score'], time_to_correct=data['time_to_correct'], distance=data['distance'])
             rows.append(dic)
     
     rows = np.array(rows)
@@ -52,7 +52,7 @@ elif mode == 'collect':
     ordr = np.argsort(names)
     rows = rows[ordr]
     with open(os.path.join(data_dir,'summary.csv'),'w') as f:
-        dw = csv.DictWriter(f,fieldnames=['mouse','score','time_to_correct','distance'])
+        dw = csv.DictWriter(f,fieldnames=['mouse','n','score','time_to_correct','distance'])
         dw.writeheader()
         for row in rows:
             dw.writerow(row)
