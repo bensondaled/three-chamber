@@ -280,7 +280,7 @@ class MouseTracker(object):
             good = True
             
             #test dists from center
-            if np.std(dists[c3i]) > 0.82 or np.std(dists[m6i]) > 0.82 or np.std(dists[o6i]) > 2.0:
+            if np.std(dists[c3i]) > 0.9 or np.std(dists[m6i]) > 0.9 or np.std(dists[o6i]) > 2.4:
                 good = False
             #x = self.background.copy()
             #for pt in pts:
@@ -643,7 +643,7 @@ if __name__=='__main__':
 
     elif mode == 'nongui':
         data_dir = '/Users/Benson/Desktop/'
-        mouse = 'DREADD_GR3_M1_revD1_1'
+        mouse = 'Black6_Y_3_rev3'
 
-        mt = MouseTracker(mouse=mouse, n=2, data_dir=data_dir, diff_thresh=40)
+        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=40)
         mt.run(show=True, save=False)
