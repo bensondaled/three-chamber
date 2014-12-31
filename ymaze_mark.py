@@ -138,7 +138,7 @@ class Marker(object):
     def run(self):
         #correct for proper start time:
         for idx,p in enumerate(self.tracking['pct_xadj'][:30]):
-            if p<0.2:
+            if p<0.15:
                 break
         start_idx = idx
         self.start_time = self.tracking['time'][start_idx]

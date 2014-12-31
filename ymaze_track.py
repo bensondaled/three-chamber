@@ -90,12 +90,14 @@ class FileHandler(object):
             filename += '-metadata.json'
         pth = pjoin(self.dirr, filename)
         return pth
-    def make_path(self, st, mode=1):
+    def make_path(self, st, mode=1, n=None):
+        if n == None:
+            n = self.n
         filename = self.mouse
         if mode == self.BL:
             filename += '_'
         elif mode == self.TRIAL:
-            filename += "_%02d_"%(self.n)
+            filename += "_%02d_"%(n)
         pth = pjoin(self.dirr, filename+st)
         return pth
     def get_n_trials(self):
@@ -103,6 +105,14 @@ class FileHandler(object):
         exists = True
         while exists:
             if not os.path.exists(self.get_path(self.TRIAL,self.MOV,n=i)):
+                break
+            i+=1
+        return i-1
+    def get_n_trials_wbehav(self):
+        i = 1
+        exists = True
+        while exists:
+            if not os.path.exists(self.make_path('behaviour.npz',n=i)):
                 break
             i+=1
         return i-1
@@ -259,6 +269,8 @@ class MouseTracker(object):
             self.all_possible_pts += list(self.pts)
         if len(self.pts) < 15:
             return False
+        if len(self.pts) > 25:
+            return False
         elif len(self.pts) > 15:
             allperms = np.array(list(it.combinations(range(len(self.pts)), 15)))
             if len(allperms)>200:
@@ -350,9 +362,9 @@ class MouseTracker(object):
                 img = self.background_image.copy()
                 lp_ksizes = [13,15,17,19,21,23,25] #from 5-15 before
                 lp_ksize = rand.choice(lp_ksizes)
-                sbd_areas = [range(10,20), range(46,55)] #8,26 46,55
+                sbd_areas = [range(3,20), range(61,140)] #8,26 46,55
                 sbd_area = [rand.choice(sbd_areas[0]), rand.choice(sbd_areas[1])]
-                sbd_circs = [np.arange(0.19,0.35), range(1000,1001)]#0.19,0.35 1000
+                sbd_circs = [np.arange(0.05,0.35), range(1000,1001)]#0.19,0.35 1000
                 sbd_circ = [rand.choice(sbd_circs[0]), rand.choice(sbd_circs[1])]
                 subtr_rowmeans = rand.choice([True,False])
 
@@ -487,7 +499,7 @@ class MouseTracker(object):
         self.pct_xadj = []
         self.heat = np.zeros((self.height,self.width))
         consecutive_skips = 0
-        self.last_center = np.mean(self.pts[np.array([self.xori, self.xoli])],axis=0).astype(int)
+        self.last_center = np.mean(self.pts[np.array([self.xori_adj, self.xoli_adj])],axis=0).astype(int)
         self.last_contour = np.array([self.last_center])
         valid,frame,ts = self.get_frame(self.mov,skip=self.resample-1)
         while valid:
