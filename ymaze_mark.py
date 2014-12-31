@@ -159,10 +159,10 @@ class Marker(object):
                 if t['to'] == self.correct+2:
                     self.score = 'correct'
                 break
-            if t['to'] == self.correct:
+            elif t['to'] == self.correct:
                 self.score = 'null'
                 continue
-            if t['to'] == self.incorrect:
+            elif t['to'] == self.incorrect:
                 self.score = 'incorrect'
                 break
         if self.score == 'correct':
