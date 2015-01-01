@@ -5,34 +5,34 @@ import os
 import csv
 import numpy as np
 
-mode = 'collect' #group single collect
+mode = 'group' #group single collect
 
 if mode == 'group':
     data_dir = 'Y:\\abadura\\Y-Maze\\Black6'
-    mice = [m for m in os.listdir(data_dir) if 'hab' not in m.lower() and m[0]!='.' and 'summary' not in m]
-    for mouse in mice:
-        print "Processing %s"%(mouse)
-        try:
-            fh = FileHandler(data_dir, mouse, n=1)
-            for tr in xrange(fh.get_n_trials()):
-                #mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=95)
-                #mt.run(show=False, save=False)
-                m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir)
-                m.run()
-        except:
-            print "%s failed."%(mouse)
+    mice = sorted([m for m in os.listdir(data_dir) if 'hab' not in m.lower() and m[0]!='.' and 'summary' not in m])
+    for idx,mouse in enumerate(mice):
+        print "(%i/%i) Processing %s"%(idx,len(mice),mouse)
+        fh = FileHandler(data_dir, mouse, n=1)
+        for tr in xrange(fh.get_n_trials()):
+            try:
+                mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=95)
+                mt.run(show=False, save=False)
+                #m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir)
+                #m.run()
+            except:
+                print "%s %i failed."%(mouse,tr+1)
 
 elif mode == 'single':
     data_dir = 'Y:\\abadura\\Y-Maze\DREADDs'
-    mouse = 'DREADD_GR3_M4_revD2_3'
-    n = 5
-    mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=100)
+    mouse = 'DREADD_GR3_M1_revD1_4'
+    n = 2
+    mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=95)
     mt.run(show=True, save=False, wait=1)
     #m = Marker(mouse=mouse, n=n, data_dir=data_dir)
     #m.run()
     
 elif mode == 'collect':
-    data_dir = 'Y:\\abadura\\Y-Maze\\Black6'
+    data_dir = 'Y:\\abadura\\Y-Maze\\DREADDs'
     mice = [m for m in os.listdir(data_dir) if 'hab' not in m.lower() and m[0]!='.' and 'summary' not in m]
     
 
