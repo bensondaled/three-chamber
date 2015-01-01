@@ -118,7 +118,7 @@ class FileHandler(object):
         return i-1
 
 class MouseTracker(object):
-    def __init__(self, mouse, n=1, data_dir='.', diff_thresh=80, resample=1, translation_max=50, smoothing_kernel=19, consecutive_skip_threshold=2, selection_from=[]):
+    def __init__(self, mouse, n=1, data_dir='.', diff_thresh=80, resample=1, translation_max=50, smoothing_kernel=19, consecutive_skip_threshold=0.5, selection_from=[]):
         self.mouse = mouse
         self.n = n
         self.data_dir = data_dir
