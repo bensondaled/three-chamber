@@ -140,10 +140,14 @@ class Marker(object):
         for idx,p in enumerate(self.tracking['pct_xadj'][:30]):
             if p<0.15:
                 break
-        start_idx = idx
+        start_idx = idx+1
         self.start_time = self.tracking['time'][start_idx]
         time = self.tracking['time'][start_idx:]
         pos = self.tracking['pos'][start_idx:]
+
+        #resample
+        time = time[::3]
+        pos = pos[::3]
         
         #run
         self.distance = self.total_distance(pos)
@@ -153,7 +157,7 @@ class Marker(object):
         self.transitions = np.array(zip(durations[moved != 0], self.chamber[moved!=0], self.chamber[1:][moved != 0]), dtype=[('time',float),('from',int),('to',int)]) #time, chamber exited,  chamber entered
         self.verify_tracking()
 
-        self.score = ''
+        self.score = 'none'
         for t in self.transitions:
             if self.score == 'null':
                 if t['to'] == self.correct+2:
@@ -173,9 +177,8 @@ class Marker(object):
         self.end()
 
 if __name__ == '__main__':
-    data_dir = '/Users/Benson/Desktop/'
-    mouse = 'DREADD_GR3_M1_acq1'
-    mouse = 'DREADD_GR3_M1_revD1_1'
+    data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
+    mouse = 'DREADD_GR3_M1_revD1_4'
 
-    m = Marker(mouse=mouse, n=1, data_dir=data_dir)
+    m = Marker(mouse=mouse, n=2, data_dir=data_dir)
     m.run()
