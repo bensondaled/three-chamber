@@ -148,6 +148,7 @@ class MouseTracker(object):
         self.load_background()
         self.height, self.width = self.background.shape
         self.mov = VideoCapture(self.fh.get_path(self.fh.TRIAL, self.fh.MOV))
+        self.mov.read();self.time=self.time[1:]
         #self.get_frame(self.mov,n=40) #MUST ADJUST TIME IF USING THIS
         self.load_pts()
         self.make_rooms()
@@ -458,7 +459,7 @@ class MouseTracker(object):
             possible = [c for c in contours if dist(contour_center(c),self.last_center)<self.translation_max]
         return possible, diff_raw
     def choose_best_contour(self, possible):
-        chosen = possible[np.argmax([contourArea(c) for c in possible])]   
+        chosen = possible[np.argmax([cv2.arcLength(c,False) for c in possible])] #arcLength or contourArea
         center = contour_center(chosen,asint=True)[0]
         return chosen,center
     def label_frame(self, frame, center):
@@ -654,8 +655,8 @@ if __name__=='__main__':
         root.mainloop()
 
     elif mode == 'nongui':
-        data_dir = '/Users/Benson/Desktop/'
-        mouse = 'Black6_Y_3_rev3'
+        data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
+        mouse = 'DREADD_GR3_M1_acq2'
 
-        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=40)
-        mt.run(show=True, save=False)
+        mt = MouseTracker(mouse=mouse, n=4, data_dir=data_dir, diff_thresh=95)
+        mt.run(show=True, save=False, wait=2000)
