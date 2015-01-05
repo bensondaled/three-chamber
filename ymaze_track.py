@@ -128,7 +128,6 @@ class MouseTracker(object):
         self.resample = resample
         self.translation_max = translation_max
         self.kernel = smoothing_kernel
-        self.consecutive_skip_threshold = (37./self.resample) * consecutive_skip_threshold
 
         # Parameters (you should not vary)
         self.cth1 = 0
@@ -145,6 +144,7 @@ class MouseTracker(object):
 
         self.framei = 0
         self.load_time()
+        self.consecutive_skip_threshold = (self.fs/self.resample) * consecutive_skip_threshold
         self.load_background()
         self.height, self.width = self.background.shape
         self.mov = VideoCapture(self.fh.get_path(self.fh.TRIAL, self.fh.MOV))
