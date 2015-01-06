@@ -21,7 +21,7 @@ class Mouse(object):
         self.dic_cond = {0:'BL6',1:'DREADD'}
         self.dic_cond_short = {0:'BL6',1:'DR'}
         self.dic_phase = {0:'acquisition',1:'reversal',2:'test',3:'force'}
-        self.dic_phase_short = {0:'acq',1:'rev',2:'atest',3:'force'}
+        self.dic_phase_short = {0:'acq',1:'rev',2:'test',3:'force'}
         full = full.upper()
         self.full = full
         if 'DREADD' in full:
@@ -47,7 +47,7 @@ class Mouse(object):
                 self.n = 0
             if 'FOR' in self.full:
                 self.phase = self.FORCE
-                self.n = -1
+                self.n = 0
             self.n = int(self.n)
         elif 'FOR' in self.full:
             i1 = full.index('FOR')
@@ -84,39 +84,43 @@ for sfi,summ_file in enumerate([summ_file1,summ_file2]):
         dic_score = dict(correct=1,incorrect=0,null=0,none=0)
         for idx,mouse in enumerate(np.unique(data.id)):
             rows = data[data.id == mouse]
-            rows = rows[rows.phase != 'force']
+            #rows = rows[rows.phase != 'force']
             #rows = rows[rows.phase != 'test']
-            avgs,fs,ttc,dist = zip(*[[np.mean([dic_score[d['score']] for d in rows[rows.full == f]]),rows[np.argwhere(rows.full==f)[0]].shortcond[0],safemean([d['ttc'] for d in rows[rows.full == f] if d['ttc']!=-1 ]),safemean([d['dist'] for d in rows[rows.full == f]])] for f in np.unique(rows.full)])
-            avgs,fs,ttc,dist = map(np.array,[avgs,fs,ttc,dist])
+            wkg = zip(*[[np.mean([dic_score[d['score']] for d in rows[rows.full == f]]),rows[np.argwhere(rows.full==f)[0]].shortcond[0],rows[np.argwhere(rows.full==f)[0]].phase[0],rows[np.argwhere(rows.full==f)[0]].day[0],safemean([d['ttc'] for d in rows[rows.full == f] if d['ttc']!=-1 ]),safemean([d['dist'] for d in rows[rows.full == f]])] for f in np.unique(rows.full)])
+            avgs,fs,phs,day,ttc,dist = map(np.array,wkg)
+            phs_1 = dict(acquisition=0,test=1,reversal=2,force=2)
+            phs_2 = dict(acquisition=0,test=1,reversal=2,force=3)
+            phs_1 = np.array([phs_1[i] for i in phs])
+            phs_2 = np.array([phs_2[i] for i in phs])
             
             pl.figure(1, figsize=fsize)
             pl.subplot(5,2, (sfi+1) + 2*(idx))
-            pl.plot(avgs[np.argsort(fs)], '-o')
+            pl.plot(avgs[np.lexsort([phs_2,day,phs_1])], '-o')
             pl.title(rows[np.argwhere(rows.id==mouse)[0]].shortname[0])
             pl.gca().set_ylabel('Success Rate')
             pl.ylim(-0.1,1.1)
-            pl.xticks(range(len(avgs)), fs[np.argsort(list(fs))], rotation=30, ha='right')
+            pl.xticks(range(len(avgs)), fs[np.lexsort([phs_2,day,phs_1])], rotation=30, ha='right')
             pl.xlim(-0.2,len(avgs)-0.8)
             pl.gcf().set_tight_layout(True)
 
 
             pl.figure(2, figsize=fsize)
             pl.subplot(5,2, (sfi+1) + 2*(idx))
-            pl.plot(ttc[np.argsort(fs)], '-o')
+            pl.plot(ttc[np.lexsort([phs_2,day,phs_1])], '-o')
             pl.title(rows[np.argwhere(rows.id==mouse)[0]].shortname[0])
             pl.gca().set_ylabel('Time to Cup (s)')
             pl.ylim(-0.1,25)
-            pl.xticks(range(len(ttc)), fs[np.argsort(list(fs))], rotation=30, ha='right')
+            pl.xticks(range(len(ttc)), fs[np.lexsort([phs_2,day,phs_1])], rotation=30, ha='right')
             pl.xlim(-0.2,len(avgs)-0.8)
             pl.gcf().set_tight_layout(True)
 
 
             pl.figure(3, figsize=fsize)
             pl.subplot(5,2, (sfi+1) + 2*(idx))
-            pl.plot(dist[np.argsort(fs)], '-o')
+            pl.plot(dist[np.lexsort([phs_2,day,phs_1])], '-o')
             pl.title(rows[np.argwhere(rows.id==mouse)[0]].shortname[0])
             pl.gca().set_ylabel('Distance')
-            pl.ylim(-0.1,2200)
-            pl.xticks(range(len(dist)), fs[np.argsort(list(fs))], rotation=30, ha='right')
+            pl.ylim(-0.1,2500)
+            pl.xticks(range(len(dist)), fs[np.lexsort([phs_2,day,phs_1])], rotation=30, ha='right')
             pl.xlim(-0.2,len(avgs)-0.8)
             pl.gcf().set_tight_layout(True)
