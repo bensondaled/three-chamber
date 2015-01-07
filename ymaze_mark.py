@@ -56,7 +56,7 @@ class Marker(object):
         
         zol,zml = np.array([self.pts[self.zoli],self.pts[self.zmli]]).astype(np.int32)
         dd = np.sqrt(np.sum((zol-zml)**2))
-        cup_dd = 0.65*dd
+        cup_dd = 0.60*dd
         #z cup:
         zol,zml = np.array([self.pts[self.zoli],self.pts[self.zmli]]).astype(np.int32)
         d_zl = zol-zml
