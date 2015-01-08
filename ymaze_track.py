@@ -656,7 +656,8 @@ if __name__=='__main__':
 
     elif mode == 'nongui':
         data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
-        mouse = 'DREADD_GR3_M1_acq2'
+        data_dir = '/Users/Benson/Desktop'
+        mouse = 'Black6_Y_3_rev3'
 
-        mt = MouseTracker(mouse=mouse, n=4, data_dir=data_dir, diff_thresh=95)
-        mt.run(show=True, save=False, wait=2000)
+        mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=95)
+        mt.run(show=True, save=False, wait=1)

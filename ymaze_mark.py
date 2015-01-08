@@ -135,7 +135,7 @@ class Marker(object):
         return chamber
     def total_distance(self, arr):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
-    def run(self):
+    def run(self, resample=3):
         #correct for proper start time:
         for idx,p in enumerate(self.tracking['pct_xadj'][:30]):
             if p<0.15:
@@ -146,8 +146,8 @@ class Marker(object):
         pos = self.tracking['pos'][start_idx:]
 
         #resample
-        time = time[::3]
-        pos = pos[::3]
+        time = time[::resample]
+        pos = pos[::resample]
         
         #run
         self.distance = self.total_distance(pos)
