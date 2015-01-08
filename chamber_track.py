@@ -152,7 +152,7 @@ class MouseTracker(object):
             self.fourcc = 1
         else:
             self.fourcc = -1
-        
+
         fh = FileHandler(self.data_dir, self.mouse)
         self.background_name = fh[mode][BACKGROUND][NAME]
         self.background_dir = fh[mode][BACKGROUND][DIR]
@@ -164,13 +164,13 @@ class MouseTracker(object):
         
         timefile = os.path.join(self.trial_dir, self.trial_name+'-timestamps.json')
         self.time = json.loads(open(timefile,'r').read())
-        try:
-            vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam.avi')
-            self.mov = VideoCapture(vidfile)
-        except:
+        vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam.avi')
+        if not os.path.exists(vidfile):
             vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam0.avi')
-            self.mov = VideoCapture(vidfile)
-        
+        if not os.path.exists(vidfile):
+            raise Exception('Movie %s not found.'%vidfile)
+        self.mov = VideoCapture(vidfile)
+
         self.results = {}
         self.results['centers'] = []
         self.results['centers_all'] = []
@@ -525,23 +525,28 @@ if __name__=='__main__':
            good.append(mousename)
         return good
     
-    root1 = tk.Tk()
-    data_dir = askdirectory(parent=root1, initialdir='C:\\Users\\andreag\\Desktop', mustexist=True, title='Select directory containing data folders.')
-    if not data_dir:
+    mode = 'gui'
+    
+    if mode == 'gui':
+        root1 = tk.Tk()
+        data_dir = askdirectory(parent=root1, initialdir='C:\\Users\\andreag\\Desktop', mustexist=True, title='Select directory containing data folders.')
+        if not data_dir:
+            root1.destroy()
+            sys.exit(0)
         root1.destroy()
-        sys.exit(0)
-    root1.destroy()
 
-    root = tk.Tk()
-    root.geometry("400x400+200+100")
-    
-    options = [o for o in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir,o))]
-    options = parse_mice_names(options)
-    
-    frame = MainFrame(root, options=options)
-    root.mainloop()
-    
-    #if tk version not working, one solution is to ditch gui and run manually:
-    #mt = MouseTracker(mouse='mouse1', mode=0, data_directory='C:\\Users\\andreag\\Desktop\\chamber_examples\\', resample=9, diff_thresh=80, selection_from=[])
-    #mt.run(show=True, save=False)
+        root = tk.Tk()
+        root.geometry("400x400+200+100")
+        
+        options = [o for o in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir,o))]
+        options = parse_mice_names(options)
+        
+        frame = MainFrame(root, options=options)
+        root.mainloop()
+    elif mode == 'nongui':
+        #if tk version not working, one solution is to ditch gui and run manually:
+        data_dir = 'E:\\METZGER\\DREADDs\\SocialChamber\\Videos'
+        mouse = 'DREADD_JM_061914_01'
+        mt = MouseTracker(mouse=mouse, mode=0, data_directory=data_dir, resample=9, diff_thresh=80, selection_from=[])
+        mt.run(show=True, save=False)
    
