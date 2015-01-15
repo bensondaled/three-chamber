@@ -156,7 +156,7 @@ class MouseTracker(object):
     def end(self):
         self.results = dict(pos=self.pos, time=np.array(self.t)-self.t[0], guess=self.guess, heat=self.heat, contour=self.contour, pct_xadj=self.pct_xadj)
         np.savez(self.fh.make_path('tracking.npz'), **self.results)
-        #savemat(self.fh.make_path('tracking.mat'), self.results)
+        savemat(self.fh.make_path('tracking.mat'), self.results)
         
         self.mov.release()
         destroyAllWindows()

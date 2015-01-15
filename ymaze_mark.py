@@ -36,9 +36,9 @@ class Marker(object):
                 raise Exception('Tracking does not make sense.')
 
     def end(self):
-        self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time)
+        self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time, start_idx=self.start_idx)
         np.savez(self.fh.make_path('behaviour.npz'), **self.results)
-        #savemat(self.fh.make_path('behaviour.mat',mode=0), self.results)
+        savemat(self.fh.make_path('behaviour.mat',mode=0), self.results)
     def man_update(self, d):
         for k,v in d.items():
             setattr(self,k,v)
@@ -135,12 +135,19 @@ class Marker(object):
         return chamber
     def total_distance(self, arr):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
-    def run(self, resample=3):
+    def run(self, resample=1, thresh_p_hand=0.001):
         #correct for proper start time:
-        for idx,p in enumerate(self.tracking['pct_xadj'][:30]):
-            if p<0.15:
-                break
+        if np.any(self.tracking['pct_xadj'][:100]):
+            started = False
+            for idx,p in enumerate(self.tracking['pct_xadj'][:200]):
+                if not started and p>thresh_p_hand:
+                    started = True
+                if started and p<thresh_p_hand:
+                    break
+        else:
+            idx = -1
         start_idx = idx+1
+        self.start_idx = start_idx
         self.start_time = self.tracking['time'][start_idx]
         time = self.tracking['time'][start_idx:]
         pos = self.tracking['pos'][start_idx:]
@@ -159,18 +166,19 @@ class Marker(object):
 
         self.score = 'none'
         for t in self.transitions:
-            if self.score == 'null':
-                if t['to'] == self.correct+2:
-                    self.score = 'correct'
-                break
+            if self.score == 'correct':
+                if t['to'] not in [self.correct+2, self.C]:
+                    self.score = 'null'
+                    break
             elif t['to'] == self.correct:
-                self.score = 'null'
+                self.score = 'correct'
+                tcor = t['time']
                 continue
             elif t['to'] == self.incorrect:
                 self.score = 'incorrect'
                 break
         if self.score == 'correct':
-            self.time_to_correct = t['time']
+            self.time_to_correct = tcor
         else:
             self.time_to_correct = -1
 
@@ -178,7 +186,8 @@ class Marker(object):
 
 if __name__ == '__main__':
     data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
-    mouse = 'DREADD_GR3_M1_revD1_4'
+    data_dir = '/Users/Benson/Desktop/'
+    mouse = 'DREADD_GR3_M1_revD1_1'
 
     m = Marker(mouse=mouse, n=2, data_dir=data_dir)
     m.run()
