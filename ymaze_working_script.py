@@ -27,27 +27,28 @@ Points to avoid errors:
 """
 
 ### GENERAL PARAMETERS
-condition = 'Black6' #OPTIONS: Black6 / DREADDs
-mode = 'collect' #OPTIONS: group / single / collect
-actions = 'track' #OPTIONS:  track / mark / both
+condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
+mode = 'single' #OPTIONS: group / single / collect
+actions = 'both' #OPTIONS:  track / mark / both
 include_hab = False #OPTIONS: True / False
 drive = 'Y:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
 ### FOR GROUP MODE
-mice = ['DREADD_GR3_M1_acq1', 'DREADD_GR3_M2_acq1'] #OPTIONS: ['m1,'m2'] / 'all' / 'ask'
+mice = ['ask'] #OPTIONS: ['m1,'m2'] / 'all' / 'ask'
 
 ### FOR SINGLE MODE
 mouse = 'DREADD_GR3_M2_acq3' #name of the folder containing the mouse's 5 trials
-n = 4 #OPTIONS: 1 / 2 / 3 / 4 / 5
+n = 1 #OPTIONS: 1 / 2 / 3 / 4 / 5
 
 ### TRACKING PARAMETERS
 diff_thresh = 95
-show = True #OPTIONS: True / False
+show = False #OPTIONS: True / False
 save_video = False #OPTIONS: True / False
 ms_bt_frames = 1 #milliseconds between frames when showing
+resample_t = 1 #1 means no resampling
 
 ### MARKING PARAMETERS
-resample = 1 #1 means no resampling
+resample_m = 1 #1 means no resampling
 hand_thresh = 0.001 #may help find proper start time, ask ben before changing
 
 
@@ -60,10 +61,14 @@ from ymaze_track import FileHandler
 import os
 import csv
 import numpy as np
+import time
 from tkFileDialog import askopenfilenames
 import sys
 import Tkinter as tk
 data_dir = os.path.join(drive, 'abadura', 'Y-Maze', condition)
+
+logfile = open(os.path.join('logs','%s.log'%str(int(time.time()))), 'a')
+print 'Program running...'
 
 if include_hab:
     exclude_word = 'EXEXEX'
@@ -72,7 +77,7 @@ elif not include_hab:
 if 'all' in mice or mice == 'all':
     mice = sorted([m for m in os.listdir(data_dir) if exclude_word not in m.lower() and m[0]!='.' and 'summary' not in m]) # this will run all mice of the selected condition
 
-elif 'ask' in mice or mice == 'ask':
+elif mode=='group' and ('ask' in mice or mice == 'ask'):
     root1 = tk.Tk()
     tempdir = os.path.join('.','temp')
     def clean():
@@ -90,38 +95,44 @@ elif 'ask' in mice or mice == 'ask':
     clean()
     if not mice:
         sys.exit(0)
+    if type(mice) in [str, unicode]:
+        mice = mice.split(' ')
     mice = [os.path.split(m)[-1] for m in mice]
-    print "Selected mice: " + str(mice)
+    print >>logfile, "Selected mice: " + str(mice);logfile.flush()
 
 if mode == 'group':
     for idx,mouse in enumerate(mice):
-        print "(%i/%i) Processing %s"%(idx+1,len(mice),mouse)
         fh = FileHandler(data_dir, mouse, n=1)
+        print '(%i/%i)'%(idx+1,len(mice))
         for tr in xrange(fh.get_n_trials()):
             try:
                 if actions in ['track','both']:
-                    mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=diff_thresh)
+                    print >>logfile, "(%i/%i) Tracking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
+                    mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
                     mt.run(show=show, save=save_video, wait=ms_bt_frames)
                 if actions in ['mark','both']:
+                    print >>logfile, "(%i/%i) Marking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
                     m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir)
-                    m.run(resample=resample, thresh_p_hand=hand_thresh)
+                    m.run(resample=resample_m, thresh_p_hand=hand_thresh)
             except:
-                print "%s %i failed."%(mouse,tr+1)
+                print "%s #%i failed."%(mouse,tr+1);logfile.flush()
 
 elif mode == 'single':
     if actions in ['track','both']:
-        mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=diff_thresh)
+        print >>logfile, "Tracking %s #%i"%(mouse,n);logfile.flush()
+        mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
         mt.run(show=show, save=save_video, wait=ms_bt_frames)
     if actions in ['mark','both']:
+        print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
         m = Marker(mouse=mouse, n=n, data_dir=data_dir)
-        m.run(resample=resample, thresh_p_hand=hand_thresh)
+        m.run(resample=resample_m, thresh_p_hand=hand_thresh)
     
 elif mode == 'collect':
     mice = [m for m in os.listdir(data_dir) if exclude_word not in m.lower() and m[0]!='.' and 'summary' not in m]
 
     rows = []
     for mouse in mice:
-        print mouse
+        print >>logfile, mouse;logfile.flush()
         fh = FileHandler(data_dir, mouse, n=1)
         for tr in xrange(fh.get_n_trials_wbehav()):
             fhm = FileHandler(data_dir, mouse, n=tr+1)
@@ -139,3 +150,6 @@ elif mode == 'collect':
         dw.writeheader()
         for row in rows:
             dw.writerow(row)
+    
+logfile.close()
+print "Run complete."

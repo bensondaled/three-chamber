@@ -167,7 +167,7 @@ class Marker(object):
         self.score = 'none'
         for t in self.transitions:
             if self.score == 'correct':
-                if t['to'] not in [self.correct+2, self.correct, self.C]:
+                if t['to'] not in [self.correct+2, self.correct, C]:
                     self.score = 'null'
                     break
             elif t['to'] == self.correct:
