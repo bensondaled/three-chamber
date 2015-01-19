@@ -137,9 +137,9 @@ class Marker(object):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
     def run(self, resample=1, thresh_p_hand=0.001):
         #correct for proper start time:
-        if np.any(self.tracking['pct_xadj'][:100]):
+        if np.any(self.tracking['pct_xadj'][:150]):
             started = False
-            for idx,p in enumerate(self.tracking['pct_xadj'][:200]):
+            for idx,p in enumerate(self.tracking['pct_xadj'][:260]):
                 if not started and p>thresh_p_hand:
                     started = True
                 if started and p<thresh_p_hand:

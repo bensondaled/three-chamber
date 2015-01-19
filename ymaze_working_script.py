@@ -28,13 +28,13 @@ Points to avoid errors:
 
 ### GENERAL PARAMETERS
 condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
-mode = 'single' #OPTIONS: group / single / collect
+mode = 'group' #OPTIONS: group / single / collect
 actions = 'both' #OPTIONS:  track / mark / both
 include_hab = False #OPTIONS: True / False
 drive = 'Y:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
 ### FOR GROUP MODE
-mice = ['ask'] #OPTIONS: ['m1,'m2'] / 'all' / 'ask'
+mice = ['all'] #OPTIONS: ['m1,'m2'] / 'all' / 'ask'
 
 ### FOR SINGLE MODE
 mouse = 'DREADD_GR3_M2_acq3' #name of the folder containing the mouse's 5 trials
@@ -137,7 +137,7 @@ elif mode == 'collect':
         for tr in xrange(fh.get_n_trials_wbehav()):
             fhm = FileHandler(data_dir, mouse, n=tr+1)
             data = np.load(fhm.make_path('behaviour.npz'))
-            dic = dict(mouse=mouse, n=tr+1, score=data['score'], time_to_correct=data['time_to_correct'], distance=data['distance'])
+            dic = dict(mouse=mouse, n=tr+1, score=data['score'], time_to_correct=data['time_to_correct'], distance=data['distance'], start_time=data['start_time'])
             rows.append(dic)
     
     rows = np.array(rows)
@@ -146,7 +146,7 @@ elif mode == 'collect':
     ordr = np.lexsort((nums,names))
     rows = rows[ordr]
     with open(os.path.join(data_dir,'summary.csv'),'w') as f:
-        dw = csv.DictWriter(f,fieldnames=['mouse','n','score','time_to_correct','distance'])
+        dw = csv.DictWriter(f,fieldnames=['mouse','n','score','time_to_correct','distance','start_time'])
         dw.writeheader()
         for row in rows:
             dw.writerow(row)
