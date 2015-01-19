@@ -40,8 +40,8 @@ class Marker(object):
 
     def end(self):
         self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time, start_idx=self.start_idx)
-        np.savez(self.fh.make_path('behaviour.npz',mode=0), **self.results)
-        savemat(self.fh.make_path('behaviour.mat',mode=0), self.results)
+        np.savez(self.fh.make_path('behaviour.npz',mode=1), **self.results)
+        savemat(self.fh.make_path('behaviour.mat',mode=1), self.results)
     def man_update(self, d):
         for k,v in d.items():
             setattr(self,k,v)
