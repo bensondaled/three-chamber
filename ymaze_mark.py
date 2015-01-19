@@ -185,9 +185,9 @@ class Marker(object):
         self.end()
 
 if __name__ == '__main__':
-    data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
-    data_dir = '/Users/Benson/Desktop/'
-    mouse = 'DREADD_GR3_M1_revD1_1'
+    data_dir = '/Volumes/wang/abadura/Y-Maze/Black6/'
+    #data_dir = '/Users/Benson/Desktop/'
+    mouse = 'Black6_Y_10_acq1'
 
     m = Marker(mouse=mouse, n=2, data_dir=data_dir)
     m.run()
