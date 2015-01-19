@@ -137,9 +137,9 @@ class Marker(object):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
     def run(self, resample=1, thresh_p_hand=0.001):
         #correct for proper start time:
-        if np.any(self.tracking['pct_xadj'][:100]):
+        if np.any(self.tracking['pct_xadj'][:150]):
             started = False
-            for idx,p in enumerate(self.tracking['pct_xadj'][:200]):
+            for idx,p in enumerate(self.tracking['pct_xadj'][:260]):
                 if not started and p>thresh_p_hand:
                     started = True
                 if started and p<thresh_p_hand:
@@ -185,9 +185,9 @@ class Marker(object):
         self.end()
 
 if __name__ == '__main__':
-    data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
-    data_dir = '/Users/Benson/Desktop/'
-    mouse = 'DREADD_GR3_M1_revD1_1'
+    data_dir = '/Volumes/wang/abadura/Y-Maze/Black6/'
+    #data_dir = '/Users/Benson/Desktop/'
+    mouse = 'Black6_Y_10_acq1'
 
     m = Marker(mouse=mouse, n=2, data_dir=data_dir)
     m.run()
