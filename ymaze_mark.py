@@ -34,9 +34,6 @@ class Marker(object):
         for tr in self.transitions:
             if [tr['from'],tr['to']] not in good:
                 raise Exception('Tracking does not make sense.')
-        ntoend = [t['to']==self.correct+2 for t in self.transitions]
-        if sum(ntoend)>1:
-            raise Exception('Mouse entered cup area twice, thats too strange to accept.')
 
     def end(self):
         self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time, start_idx=self.start_idx)
@@ -169,21 +166,19 @@ class Marker(object):
 
         self.score = 'none'
         for t in self.transitions:
-            if self.score == 'maybecorrect':
+            if self.score == 'null':
                 if t['to'] not in [self.correct+2, self.correct, C]:
-                    self.score = 'null'
+                    break
+                elif t['to'] == self.correct+2:
+                    self.score = 'correct'
+                    tcor = t['time']
                     break
             elif t['to'] == self.correct:
-                self.score = 'maybecorrect'
+                self.score = 'null'
                 continue
             elif t['to'] == self.incorrect:
                 self.score = 'incorrect'
                 break
-        if self.score=='maybecorrect' and t['to'] == self.correct+2:
-            tcor = t['time']
-            self.score = 'correct'
-        elif self.score=='maybecorrect':
-            self.score = 'null'
 
         if self.score == 'correct':
             self.time_to_correct = tcor

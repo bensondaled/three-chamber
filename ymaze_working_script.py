@@ -28,7 +28,7 @@ Points to avoid errors:
 
 ### GENERAL PARAMETERS
 condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
-mode = 'group' #OPTIONS: group / single / collect
+mode = 'single' #OPTIONS: group / single / collect
 actions = 'both' #OPTIONS:  track / mark / both
 include_hab = False #OPTIONS: True / False
 drive = 'Y:' #the drive on which wang lab bucket is mounted, ex 'Y:'
@@ -37,7 +37,7 @@ drive = 'Y:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 mice = ['all'] #OPTIONS: ['m1,'m2'] / 'all' / 'ask'
 
 ### FOR SINGLE MODE
-mouse = 'DREADD_GR3_M2_acq3' #name of the folder containing the mouse's 5 trials
+mouse = 'DREADD_GR3_M2_acq1' #name of the folder containing the mouse's 5 trials
 n = 1 #OPTIONS: 1 / 2 / 3 / 4 / 5
 
 ### TRACKING PARAMETERS
@@ -115,7 +115,7 @@ if mode == 'group':
                     m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir)
                     m.run(resample=resample_m, thresh_p_hand=hand_thresh)
             except:
-                print "%s #%i failed."%(mouse,tr+1);logfile.flush()
+                print >>logfile, "%s #%i failed."%(mouse,tr+1);logfile.flush()
 
 elif mode == 'single':
     if actions in ['track','both']:
