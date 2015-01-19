@@ -37,8 +37,9 @@ class Mouse(object):
         self.dic_cond_short = {0:'BL6',1:'DR'}
         self.dic_phase = {0:'acquisition',1:'reversal',2:'test',3:'force'}
         self.dic_phase_short = {0:'acq',1:'rev',2:'test',3:'force'}
-        full = full.upper()
+        full = full.upper().replace('-','')
         self.full = full
+        print full
         if 'DREADD' in full:
             self.cond = self.DREADD
             i0 = full.index('DREADD')+6
@@ -54,9 +55,9 @@ class Mouse(object):
             i1 = full.index('REV')
             self.phase = self.REV
             if self.cond == self.DREADD:
-                self.day = int(full[i1+4])
+                self.day = int(full[i0+6:].replace('D','')[i1-i0-6+3])#+4
             elif self.cond == self.BL6:
-                self.day = int(full[i1+3])
+                self.day = int(full.replace('D','')[i1+3])
             self.n = full[-1]
             if self.cond == self.BL6 and self.full[-2] == 'V' and int(self.full[-1])==self.day:
                 self.n = 0
@@ -104,6 +105,11 @@ for statmode in ['mean','median']:
                 if d['mouse'] =='DREADD_GR3_M4_acq4_tr05':
                     d['n'] = 5
                     d['mouse'] = 'DREADD_GR3_M4_acq4'
+                if d['mouse'].upper() == 'BLACK6_Y_10_REVD2_3-SECONDHALF':
+                    d['mouse'] = 'Black6_Y_10_revD2'
+                    d['n'] = int(d['n'])+3
+                if d['mouse'].upper() == 'DRAEDD_GR4_M1_ACQ1':
+                    d['mouse'] = 'DREADD_GR4_M1_ACQ1'
                 if statmode=='median' and d['time_to_correct'] == '-1': #median
                     d['time_to_correct'] = 99.9
                 data[i] = d
