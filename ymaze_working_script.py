@@ -28,7 +28,7 @@ Points to avoid errors:
 
 ### GENERAL PARAMETERS
 condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
-mode = 'group' #OPTIONS: group / single / collect
+mode = 'collect' #OPTIONS: group / single / collect
 actions = 'mark' #OPTIONS:  track / mark / both
 include_hab = False #OPTIONS: True / False
 drive = 'W:' #the drive on which wang lab bucket is mounted, ex 'Y:'
@@ -38,7 +38,7 @@ mice = ['all'] #OPTIONS: ['m1,'m2'] / 'all' / 'ask'
 
 ### FOR SINGLE MODE
 mouse = 'Black6_Y_10_acq1' #name of the folder containing the mouse's 5 trials
-n = 2 #OPTIONS: 1 / 2 / 3 / 4 / 5
+n = 3 #OPTIONS: 1 / 2 / 3 / 4 / 5
 
 ### TRACKING PARAMETERS
 diff_thresh = 95
