@@ -163,10 +163,11 @@ class Marker(object):
         if np.any(self.tracking['pct_xadj'][:start_range]):
             started = False
             for idx,c,p in zip(range(260),self.tracking['contour'][:start_range],self.tracking['pct_xadj'][:start_range]):
-                mindist = min([dist_pl(np.squeeze(ppp),self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
-                if not started and p>thresh_p_hand or mindist<=thresh_wall_dist:
+                mindist_r = min([dist_pl(np.squeeze(ppp),self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
+                mindist_l = min([dist_pl(np.squeeze(ppp),self.pts[self.xoli],self.pts[self.xmli]) for ppp in c])
+                if not started and p>thresh_p_hand or mindist_r<=thresh_wall_dist or mindist_l<=thresh_wall_dist:
                     started = True
-                if started and p<thresh_p_hand and mindist>thresh_wall_dist:
+                if started and p<thresh_p_hand and mindist_l>thresh_wall_dist and mindist_r>thresh_wall_dist:
                     break
         else:
             idx = -1
