@@ -27,8 +27,8 @@ Points to avoid errors:
 """
 
 ### GENERAL PARAMETERS
-condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
-mode = 'single' #OPTIONS: group / single / collect
+condition = 'Black6' #OPTIONS: Black6 / DREADDs
+mode = 'group' #OPTIONS: group / single / collect
 actions = 'both' #OPTIONS:  track / mark / both
 include_hab = False #OPTIONS: True / False
 drive = 'Y:' #the drive on which wang lab bucket is mounted, ex 'Y:'
