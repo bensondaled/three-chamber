@@ -161,7 +161,7 @@ class Marker(object):
         if np.any(self.tracking['pct_xadj'][:start_range]):
             started = False
             for idx,c,p in zip(range(260),self.tracking['contour'][:start_range],self.tracking['pct_xadj'][:start_range]):
-                mindist = min([dist_pl(ppp[0],self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
+                mindist = min([dist_pl(np.squeeze(ppp),self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
                 if not started and p>thresh_p_hand or mindist<=thresh_wall_dist:
                     started = True
                 if started and p<thresh_p_hand and mindist>thresh_wall_dist:
