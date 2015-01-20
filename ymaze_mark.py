@@ -108,6 +108,7 @@ class Marker(object):
         except:
             self.side = None
             while self.side not in ['l','r']:
+                print 'Warning for mouse %s #%i :'%(self.mouse, self.n)
                 self.side = raw_input('Correct side was not indicated in this dataset. Please enter correct side (l/r):').lower()
             self.metadata['side'] = self.side
             try:
@@ -219,7 +220,7 @@ class Marker(object):
 if __name__ == '__main__':
     data_dir = '/Volumes/wang/abadura/Y-Maze/Black6/'
     #data_dir = '/Users/Benson/Desktop/'
-    mouse = 'Black6_Y_1-_revD2_forced'
+    mouse = 'Black6_Y_3_rev1'
 
-    m = Marker(mouse=mouse, n=2, data_dir=data_dir)
+    m = Marker(mouse=mouse, n=1, data_dir=data_dir)
     m.run()
