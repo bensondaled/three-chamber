@@ -21,11 +21,12 @@ def dist_pl(p, p1, p2):
 C,X,Y,Z,YEND,ZEND = 0,1,2,3,4,5 #this order is crucial!
 
 class Marker(object):
-    def __init__(self, mouse, n=1, data_dir='.', consecutive_threshold=0.200):
+    def __init__(self, mouse, n=1, data_dir='.', consecutive_threshold=0.200, cup_dd_factor=0.54):
         self.mouse = mouse
         self.n = n
         self.data_dir = data_dir
         self.consecutive_threshold = consecutive_threshold #seconds
+        self.cup_dd_factor = cup_dd_factor
         
         self.fh = FileHandler(self.data_dir, self.mouse, self.n)
 
@@ -64,7 +65,7 @@ class Marker(object):
         
         zol,zml = np.array([self.pts[self.zoli],self.pts[self.zmli]]).astype(np.int32)
         dd = np.sqrt(np.sum((zol-zml)**2))
-        cup_dd = 0.54*dd #bigger multiplier means smaller end zone
+        cup_dd = self.cup_dd_factor*dd #bigger multiplier means smaller end zone
         #z cup:
         zol,zml = np.array([self.pts[self.zoli],self.pts[self.zmli]]).astype(np.int32)
         d_zl = zol-zml
