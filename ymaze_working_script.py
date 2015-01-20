@@ -50,6 +50,7 @@ resample_t = 1 #1 means no resampling
 ### MARKING PARAMETERS
 resample_m = 1 #1 means no resampling
 wall_thresh = 6 #may help find proper start time, ask ben before changing
+wall_thresh_x = 0.33 #may help find proper start time, ask ben before changing
 hand_thresh = 0.001 #may help find proper start time, ask ben before changing
 start_range = 260 #may help find proper start time, ask ben before changing
 
@@ -115,7 +116,7 @@ if mode == 'group':
                 if actions in ['mark','both']:
                     print >>logfile, "(%i/%i) Marking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
                     m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir)
-                    m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range)
+                    m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range, thresh_wall_dist_x=wall_thresh_x)
             except:
                 print >>logfile, "%s #%i failed."%(mouse,tr+1);logfile.flush()
 
@@ -127,7 +128,7 @@ elif mode == 'single':
     if actions in ['mark','both']:
         print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
         m = Marker(mouse=mouse, n=n, data_dir=data_dir)
-        m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range)
+        m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range, thresh_wall_dist_x=wall_thresh_x)
     
 elif mode == 'collect':
     mice = [m for m in os.listdir(data_dir) if exclude_word not in m.lower() and m[0]!='.' and 'summary' not in m]
