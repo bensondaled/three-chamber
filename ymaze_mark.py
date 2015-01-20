@@ -144,6 +144,8 @@ class Marker(object):
     def total_distance(self, arr):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
     def correct_for_consecutive(self, tr):
+        if len(tr)==0:
+            return tr
         skipnext = False
         new_tr = [tr[0]]
         for t,last,nex in zip(tr[1:-1],tr[:-2],tr[2:]):
