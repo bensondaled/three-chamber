@@ -189,21 +189,19 @@ class Marker(object):
 
         self.score = 'none'
         for t in self.transitions:
-            if self.score == 'maybecorrect':
+            if self.score == 'null':
                 if t['to'] not in [self.correct+2, self.correct, C]:
-                    self.score = 'null'
+                    break
+                elif t['to'] == self.correct+2:
+                    self.score = 'correct'
+                    tcor = t['time']
                     break
             elif t['to'] == self.correct:
-                self.score = 'maybecorrect'
+                self.score = 'null'
                 continue
             elif t['to'] == self.incorrect:
                 self.score = 'incorrect'
                 break
-        if self.score=='maybecorrect' and t['to'] == self.correct+2:
-            tcor = t['time']
-            self.score = 'correct'
-        elif self.score=='maybecorrect':
-            self.score = 'null'
 
         if self.score == 'correct':
             self.time_to_correct = tcor
