@@ -11,13 +11,21 @@ from matplotlib import path as mpl_path
 from ymaze_track import FileHandler,ginput,dist,contour_center
 from scipy.io import savemat
 
+def dist_pl(p, p1, p2):
+    #dist from point to line
+    p,p1,p2 = map(np.array, [p,p1,p2])
+    x1,y1 = p1
+    x2,y2 = p2
+    return np.abs((y2-y1)*p[0] - (x2-x1)*p[1] + x2*y1 - y2*x1)/np.sqrt(np.sum((p2-p1)**2))
+
 C,X,Y,Z,YEND,ZEND = 0,1,2,3,4,5 #this order is crucial!
 
 class Marker(object):
-    def __init__(self, mouse, n=1, data_dir='.'):
+    def __init__(self, mouse, n=1, data_dir='.', consecutive_threshold=0.200):
         self.mouse = mouse
         self.n = n
         self.data_dir = data_dir
+        self.consecutive_threshold = consecutive_threshold #seconds
         
         self.fh = FileHandler(self.data_dir, self.mouse, self.n)
 
@@ -56,7 +64,7 @@ class Marker(object):
         
         zol,zml = np.array([self.pts[self.zoli],self.pts[self.zmli]]).astype(np.int32)
         dd = np.sqrt(np.sum((zol-zml)**2))
-        cup_dd = 0.60*dd
+        cup_dd = 0.54*dd #bigger multiplier means smaller end zone
         #z cup:
         zol,zml = np.array([self.pts[self.zoli],self.pts[self.zmli]]).astype(np.int32)
         d_zl = zol-zml
@@ -135,14 +143,28 @@ class Marker(object):
         return chamber
     def total_distance(self, arr):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
-    def run(self, resample=1, thresh_p_hand=0.001):
+    def correct_for_consecutive(self, tr):
+        skipnext = False
+        new_tr = [tr[0]]
+        for t,last,nex in zip(tr[1:-1],tr[:-2],tr[2:]):
+            if skipnext:
+                skipnext = False
+                continue
+            if t['to']==last['from'] and nex['to']==t['from'] and nex['time']-last['time']<=self.consecutive_threshold:
+                skipnext = True
+            else:
+                new_tr.append(t)
+        new_tr.append(tr[-1])
+        return np.array(new_tr)
+    def run(self, resample=1, thresh_p_hand=0.001,thresh_wall_dist=6,start_range=260):
         #correct for proper start time:
-        if np.any(self.tracking['pct_xadj'][:150]):
+        if np.any(self.tracking['pct_xadj'][:start_range]):
             started = False
-            for idx,p in enumerate(self.tracking['pct_xadj'][:260]):
-                if not started and p>thresh_p_hand:
+            for idx,c,p in zip(range(260),self.tracking['contour'][:start_range],self.tracking['pct_xadj'][:start_range]):
+                mindist = min([dist_pl(ppp[0],self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
+                if not started and p>thresh_p_hand or mindist<=thresh_wall_dist:
                     started = True
-                if started and p<thresh_p_hand:
+                if started and p<thresh_p_hand and mindist>thresh_wall_dist:
                     break
         else:
             idx = -1
@@ -162,6 +184,7 @@ class Marker(object):
         durations = time[1:] - time[0]
         moved = self.chamber[1:]-self.chamber[:-1]
         self.transitions = np.array(zip(durations[moved != 0], self.chamber[moved!=0], self.chamber[1:][moved != 0]), dtype=[('time',float),('from',int),('to',int)]) #time, chamber exited,  chamber entered
+        self.transitions = self.correct_for_consecutive(self.transitions)
         self.verify_tracking()
 
         self.score = 'none'
@@ -188,9 +211,9 @@ class Marker(object):
         self.end()
 
 if __name__ == '__main__':
-    data_dir = '/Volumes/wang/abadura/Y-Maze/Black6/'
-    #data_dir = '/Users/Benson/Desktop/'
-    mouse = 'Black6_Y_10_acq1'
+    data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
+    data_dir = '/Users/Benson/Desktop/'
+    mouse = 'Black6_Y_10_revD2_3'
 
     m = Marker(mouse=mouse, n=2, data_dir=data_dir)
     m.run()
