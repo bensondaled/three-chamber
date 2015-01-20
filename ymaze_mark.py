@@ -158,7 +158,7 @@ class Marker(object):
                 new_tr.append(t)
         new_tr.append(tr[-1])
         return np.array(new_tr)
-    def run(self, resample=1, thresh_p_hand=0.001,thresh_wall_dist=4,start_range=260,thresh_wall_dist_x=0.33):
+    def run(self, resample=1, thresh_p_hand=0.001,thresh_wall_dist=4,start_range=260,thresh_wall_dist_x=0.45):
         thresh_wall_dist_x = thresh_wall_dist_x*dist(self.pts[self.xoli],self.pts[self.xmli])
         #correct for proper start time:
         if np.any(self.tracking['pct_xadj'][:start_range]):
@@ -167,9 +167,10 @@ class Marker(object):
                 mindist_r = min([dist_pl(np.squeeze(ppp),self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
                 mindist_l = min([dist_pl(np.squeeze(ppp),self.pts[self.xoli],self.pts[self.xmli]) for ppp in c])
                 mindist_b = min([dist_pl(np.squeeze(ppp),self.pts[self.xoli],self.pts[self.xori]) for ppp in c])
-                if not started and (p>thresh_p_hand or mindist_r<=thresh_wall_dist or mindist_l<=thresh_wall_dist):
+                onwall = mindist_b<=thresh_wall_dist_x and (mindist_r<=thresh_wall_dist or mindist_l<=thresh_wall_dist)
+                if not started and (p>thresh_p_hand or onwall):
                     started = True
-                if started and p<thresh_p_hand and mindist_l>thresh_wall_dist and mindist_r>thresh_wall_dist:
+                if started and p<thresh_p_hand and (not onwall):
                     break
         else:
             idx = -1
