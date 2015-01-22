@@ -8,7 +8,7 @@ To use the script:
 
 Options available to you:
     -mode: 
-    (1) group mode allows you to process many mice one after another. 
+    (1) group mode allows you to process many mice one after another, or one mouse, all 5 videos.
     (2) single mode allows you to process a single movie.
     (3) collect mode runs through all the mice and puts the marking data into a spreadsheet.
 
@@ -27,22 +27,22 @@ Points to avoid errors:
 """
 
 ### GENERAL PARAMETERS
-condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
-mode = 'collect' #OPTIONS: group / single / collect
+condition = 'Black6' #OPTIONS: Black6 / DREADDs
+mode = 'single' #OPTIONS: group / single / collect
 actions = 'mark' #OPTIONS:  track / mark / both
 include_hab = False #OPTIONS: True / False
-drive = 'W:' #the drive on which wang lab bucket is mounted, ex 'Y:'
+drive = 'Z:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
 ### FOR GROUP MODE
-mice = ['all'] #OPTIONS: ['m1,'m2'] / 'all' / 'ask'
+mice = ['all'] #OPTIONS: ['Black6_Y_1_acq1','Black6_Y_1_acq2'] / 'all' / 'ask'
 
 ### FOR SINGLE MODE
-mouse = 'Black6_Y_10_acq1' #name of the folder containing the mouse's 5 trials
-n = 3 #OPTIONS: 1 / 2 / 3 / 4 / 5
+mouse = 'Black6_Y_1_acq1' #name of the folder containing the mouse's 5 trials
+n = 1 #OPTIONS: 1 / 2 / 3 / 4 / 5 (movie number)
 
 ### TRACKING PARAMETERS
 diff_thresh = 95
-show = False #OPTIONS: True / False
+show = True #OPTIONS: True / False
 save_video = False #OPTIONS: True / False
 ms_bt_frames = 1 #milliseconds between frames when showing
 resample_t = 1 #1 means no resampling
@@ -68,9 +68,10 @@ import time
 from tkFileDialog import askopenfilenames
 import sys
 import Tkinter as tk
-data_dir = os.path.join(drive, 'abadura', 'Y-Maze', condition)
+data_dir = os.path.join(drive, 'abadura', 'Y-Maze_analyzed', condition)
 
 logfile = open(os.path.join('logs','%s.log'%str(int(time.time()))), 'a')
+print 'Log will be in %s'%('%s.log'%str(int(time.time())))
 print 'Program running...'
 
 if include_hab:
