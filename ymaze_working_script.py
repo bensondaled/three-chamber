@@ -16,6 +16,7 @@ Options available to you:
     (1) "track" tracks the mouse's location and saves this data. (you only need to do this once ever for a mouse, unless you change tracking parameters).
     (2) "mark" uses the tracking data to determine the mouse's performance. (tracking must have been run in order for this to work).
     (3) "both" runs both tracking and marking sequentially.
+    (4) "play" plays back the specified movie.
 
     -include_hab: determines whether or not to include habituation sessions (as defined by those which contain 'hab' in their names). This only applies when running mode=group and mice='all'/'ask', or when running mode=collect.
 
@@ -29,7 +30,7 @@ Points to avoid errors:
 ### GENERAL PARAMETERS
 condition = 'Black6' #OPTIONS: Black6 / DREADDs
 mode = 'single' #OPTIONS: group / single / collect
-actions = 'mark' #OPTIONS:  track / mark / both
+actions = 'play' #OPTIONS:  track / mark / both / play
 include_hab = False #OPTIONS: True / False
 drive = 'Z:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
@@ -68,6 +69,7 @@ import time
 from tkFileDialog import askopenfilenames
 import sys
 import Tkinter as tk
+from playback import Playback
 data_dir = os.path.join(drive, 'abadura', 'Y-Maze_analyzed', condition)
 
 logfile = open(os.path.join('logs','%s.log'%str(int(time.time()))), 'a')
