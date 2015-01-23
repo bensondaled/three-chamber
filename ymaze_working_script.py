@@ -130,6 +130,10 @@ elif mode == 'single':
         print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
         m = Marker(mouse=mouse, n=n, data_dir=data_dir)
         m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range, thresh_wall_dist_x=wall_thresh_x)
+    if actions == 'play':
+        print >>logfile, "Playing %s #%i"%(mouse,n);logfile.flush()
+        pb = Playback(ymaze_path=mouse, ymaze_n=n, data_dir=data_dir)
+        pb.play()
     
 elif mode == 'collect':
     mice = [m for m in os.listdir(data_dir) if exclude_word not in m.lower() and m[0]!='.' and 'summary' not in m]
