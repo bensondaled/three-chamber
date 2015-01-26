@@ -40,7 +40,7 @@ class Marker(object):
         self.load_tracking()
 
     def verify_tracking(self):
-        good = [[X,C],[Y,Y0],[Y0,C],[Z,Z0],[Z0,C],[C,X],[C,Y0],[Y0,C],[C,Z0],[Z0,C],[Y,YEND],[YEND,Y],[Z,ZEND],[ZEND,Z]]
+        good = [[X,C],[C,X],[C,Y0],[Y0,C],[Y0,Y],[Y,Y0],[Y,YEND],[YEND,Y],[C,Z0],[Z0,C],[Z0,Z],[Z,Z0],[Z,ZEND],[ZEND,Z]]
         for tr in self.transitions:
             if [tr['from'],tr['to']] not in good:
                 raise Exception('Tracking does not make sense.')
