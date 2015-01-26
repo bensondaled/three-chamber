@@ -58,7 +58,7 @@ class Marker(object):
         self.path_y = mpl_path.Path(self.pts[np.array([self.ymli,self.yoli,self.yori,self.ymri])])
         self.path_z = mpl_path.Path(self.pts[np.array([self.zmli,self.zoli,self.zori,self.zmri])])
         self.path_x_full = mpl_path.Path(self.pts[np.array([self.xcli,self.xoli,self.xori,self.xcri])])
-        self.path_y_full = mpl_path.Path(self.pts[np.array([self.ycli,self.yoli,self.yori,self.zcri])])
+        self.path_y_full = mpl_path.Path(self.pts[np.array([self.ycli,self.yoli,self.yori,self.ycri])])
         self.path_z_full = mpl_path.Path(self.pts[np.array([self.zcli,self.zoli,self.zori,self.zcri])])
         self.border_mask = np.zeros((self.height,self.width))
         pth = mpl_path.Path(self.pts[np.array([self.yoli,self.yori,self.ymri,self.ycri,self.zmli,self.zoli,self.zori,self.zmri,self.zcri,self.xmli,self.xoli,self.xori,self.xmri,self.xcri,self.ymli])])
