@@ -18,15 +18,16 @@ def dist_pl(p, p1, p2):
     x2,y2 = p2
     return np.abs((y2-y1)*p[0] - (x2-x1)*p[1] + x2*y1 - y2*x1)/np.sqrt(np.sum((p2-p1)**2))
 
-C,X,Y,Z,YEND,ZEND = 0,1,2,3,4,5 #this order is crucial!
+C,X,Y0,Z0,Y,Z,YEND,ZEND = 0,1,2,3,4,5,6,7 #this order is crucial!
 
 class Marker(object):
-    def __init__(self, mouse, n=1, data_dir='.', consecutive_threshold=0.200, cup_dd_factor=0.54):
+    def __init__(self, mouse, n=1, data_dir='.', consecutive_threshold=0.200, cup_dd_factor=0.54, mark_mode='normal'):
         self.mouse = mouse
         self.n = n
         self.data_dir = data_dir
         self.consecutive_threshold = consecutive_threshold #seconds
         self.cup_dd_factor = cup_dd_factor
+        self.mark_mode = mark_mode #determines only the result of correct/incorrect/etc. all other results *always* use normal mode
         
         self.fh = FileHandler(self.data_dir, self.mouse, self.n)
 
@@ -39,23 +40,26 @@ class Marker(object):
         self.load_tracking()
 
     def verify_tracking(self):
-        good = [[X,C],[Y,C],[Z,C],[C,X],[C,Y],[C,Z],[Y,YEND],[YEND,Y],[Z,ZEND],[ZEND,Z]]
+        good = [[X,C],[Y,Y0],[Y0,C],[Z,Z0],[Z0,C],[C,X],[C,Y0],[Y0,C],[C,Z0],[Z0,C],[Y,YEND],[YEND,Y],[Z,ZEND],[ZEND,Z]]
         for tr in self.transitions:
             if [tr['from'],tr['to']] not in good:
                 raise Exception('Tracking does not make sense.')
 
     def end(self):
-        self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time, start_idx=self.start_idx)
+        self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time, start_idx=self.start_idx, mark_mode=self.mark_mode, chamber=self.chamber)
         np.savez(self.fh.make_path('behaviour.npz',mode=1), **self.results)
         savemat(self.fh.make_path('behaviour.mat',mode=1), self.results)
     def man_update(self, d):
         for k,v in d.items():
             setattr(self,k,v)
     def make_rooms(self):
-        self.room_key = zip([0,1,2,3,4,5],['C=center area','X=bottom arm','Y=left arm','Z=right arm','YEND=left cup','ZEND=right cup'])
+        self.room_key = zip([0,1,2,3,4,5,6,7],['C=center area','X=bottom arm','Y0=left arm central', 'Z0=right arm central','Y=left arm','Z=right arm','YEND=left cup','ZEND=right cup'])
         self.path_x = mpl_path.Path(self.pts[np.array([self.xmli,self.xoli,self.xori,self.xmri])])
         self.path_y = mpl_path.Path(self.pts[np.array([self.ymli,self.yoli,self.yori,self.ymri])])
         self.path_z = mpl_path.Path(self.pts[np.array([self.zmli,self.zoli,self.zori,self.zmri])])
+        self.path_x_full = mpl_path.Path(self.pts[np.array([self.xcli,self.xoli,self.xori,self.xcri])])
+        self.path_y_full = mpl_path.Path(self.pts[np.array([self.ycli,self.yoli,self.yori,self.zcri])])
+        self.path_z_full = mpl_path.Path(self.pts[np.array([self.zcli,self.zoli,self.zori,self.zcri])])
         self.border_mask = np.zeros((self.height,self.width))
         pth = mpl_path.Path(self.pts[np.array([self.yoli,self.yori,self.ymri,self.ycri,self.zmli,self.zoli,self.zori,self.zmri,self.zcri,self.xmli,self.xoli,self.xori,self.xmri,self.xcri,self.ymli])])
         for iy in xrange(self.border_mask.shape[0]):
@@ -121,7 +125,14 @@ class Marker(object):
                 with open('crash_log.txt','a') as f:
                     f.write("%s"%str(self.metadata))
         self.correct = [Y,Z][['l','r'].index(self.side)]
-        self.incorrect = [Z,Y][['l','r'].index(self.side)]
+        self.incorrect = [Y,Z][['r','l'].index(self.side)]
+        self.destination = self.correct+2
+        if self.mark_mode == 'normal':
+            self.correct_pnr = self.correct #point of no return
+            self.incorrect_pnr = self.incorrect #point of no return
+        elif self.mark_mode == 'extend':
+            self.correct_pnr = self.correct-2
+            self.incorrect_pnr = self.incorrect-2
     def load_background(self):
         try:
             bg = np.load(self.fh.make_path('background.npz',mode=self.fh.BL))
@@ -142,6 +153,10 @@ class Marker(object):
             chamber = Y
         elif self.path_z.contains_point(pos):
             chamber = Z
+        elif self.path_y_full.contains_point(pos):
+            chamber = Y0
+        elif self.path_z_full.contains_point(pos):
+            chamber = Z0
         return chamber
     def total_distance(self, arr):
         return np.sum(np.array([dist(*i) for i in zip(arr[1:],arr[:-1])]))
@@ -198,16 +213,16 @@ class Marker(object):
         self.score = 'none'
         for t in self.transitions:
             if self.score == 'null':
-                if t['to'] not in [self.correct+2, self.correct, C]:
+                if t['to'] not in [self.correct, self.correct_pnr, self.destination, C]:
                     break
-                elif t['to'] == self.correct+2:
+                elif t['to'] == self.destination:
                     self.score = 'correct'
                     tcor = t['time']
                     break
-            elif t['to'] == self.correct:
+            elif t['to'] == self.correct_pnr:
                 self.score = 'null'
                 continue
-            elif t['to'] == self.incorrect:
+            elif t['to'] == self.incorrect_pnr:
                 self.score = 'incorrect'
                 break
 

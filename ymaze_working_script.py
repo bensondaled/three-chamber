@@ -48,6 +48,7 @@ ms_bt_frames = 1 #milliseconds between frames when showing
 resample_t = 1 #1 means no resampling
 
 ### MARKING PARAMETERS
+arm_border = 'outer' #OPTIONS: central / outer
 resample_m = 1 #1 means no resampling
 wall_thresh = 6 #may help find proper start time, ask ben before changing
 wall_thresh_x = 0.33 #may help find proper start time, ask ben before changing
@@ -74,6 +75,7 @@ logfile = open(os.path.join('logs','%s.log'%str(int(time.time()))), 'a')
 print 'Log will be in %s'%('%s.log'%str(int(time.time())))
 print 'Program running...'
 
+mark_mode = dict(central='extend', outer='normal')[arms]
 if include_hab:
     exclude_word = 'EXEXEX'
 elif not include_hab:
@@ -116,7 +118,7 @@ if mode == 'group':
                     mt.run(show=show, save=save_video, wait=ms_bt_frames)
                 if actions in ['mark','both']:
                     print >>logfile, "(%i/%i) Marking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
-                    m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir)
+                    m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir, mark_mode=mark_mode)
                     m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range, thresh_wall_dist_x=wall_thresh_x)
             except:
                 print >>logfile, "%s #%i failed."%(mouse,tr+1);logfile.flush()
@@ -128,7 +130,7 @@ elif mode == 'single':
         mt.run(show=show, save=save_video, wait=ms_bt_frames)
     if actions in ['mark','both']:
         print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
-        m = Marker(mouse=mouse, n=n, data_dir=data_dir)
+        m = Marker(mouse=mouse, n=n, data_dir=data_dir, mark_mode=mark_mode)
         m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range, thresh_wall_dist_x=wall_thresh_x)
     if actions == 'play':
         print >>logfile, "Playing %s #%i"%(mouse,n);logfile.flush()
