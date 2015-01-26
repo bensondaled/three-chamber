@@ -7,7 +7,7 @@ import tkFileDialog as tk
 from ymaze_track import FileHandler
 
 class Playback(object):
-    def __init__(self, ymaze_path=None, ymaze_n=1, movfile=None, timefile=None, data_dir='.'):
+    def __init__(self, ymaze_path=None, ymaze_n=1, movfile='', timefile='', data_dir='.'):
         self.ymaze_path = ymaze_path
         self.ymaze_n = ymaze_n
         self.data_dir = data_dir
@@ -20,32 +20,33 @@ class Playback(object):
             self.timefile = self.fh.get_path(self.fh.TRIAL, self.fh.TIME, self.ymaze_n)
 
         self.t = np.squeeze(json.loads(open(self.timefile).read()))
-        Ts = int(np.rint(np.mean(self.t[1:]-t[:-1])*1000))
+        self.Ts = int(np.rint(np.mean(self.t[1:]-self.t[:-1])*1000))
         self.mov = cv2.VideoCapture(self.movfile)
         _=self.mov.read()
         self.t = self.t[1:]
     def play(self):
         idx = 0
-        cv2.namedWindow('Movie')
-        cv2.createTrackbar('Ts', 'Playback', Ts, 200, lambda x: x)
+        cv2.namedWindow('Playback')
+        cv2.createTrackbar('Ts', 'Playback', self.Ts, 200, lambda x: x)
         paused = True
 
-        valid,frame = mov.read()
+        valid,frame = self.mov.read()
         while valid:
+            delay = cv2.getTrackbarPos('Ts', 'Playback')
+            if delay == 0:
+                delay = 1
             if not paused:
-                tstr = "%0.3f"%(t[idx]-self.t[0])
+                tstr = "%0.3f"%(self.t[idx]-self.t[0])
+                frame = frame.astype(np.uint8)
                 cv2.putText(frame, tstr, (0,frame.shape[0]-3), cv2.FONT_HERSHEY_SIMPLEX, 1., (255,255,255))
                 cv2.imshow('Playback', frame)
-                delay = cv2.getTrackbarPos('Ts', 'Playback')
-                if delay == 0:
-                    delay = 1
-                tidx += 1
+                idx += 1
             k = cv2.waitKey(delay)
             if k == ord('p'):
                 paused = not paused
             elif k == ord('q'):
                 break
-            valid,frame = mov.read()
+            valid,frame = self.mov.read()
 
         cv2.destroyAllWindows()
 
