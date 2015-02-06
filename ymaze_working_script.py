@@ -29,8 +29,8 @@ Points to avoid errors:
 
 ### GENERAL PARAMETERS
 condition = 'Black6' #OPTIONS: Black6 / DREADDs
-mode = 'single' #OPTIONS: group / single / collect
-actions = 'play' #OPTIONS:  track / mark / both / play
+mode = 'group' #OPTIONS: group / single / collect
+actions = 'both' #OPTIONS:  track / mark / both / play
 include_hab = False #OPTIONS: True / False
 drive = 'Z:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
@@ -43,13 +43,15 @@ n = 1 #OPTIONS: 1 / 2 / 3 / 4 / 5 (movie number)
 
 ### TRACKING PARAMETERS
 diff_thresh = 95
-show = True #OPTIONS: True / False
-save_video = False #OPTIONS: True / False
+show = False #OPTIONS: True / False
 ms_bt_frames = 1 #milliseconds between frames when showing
 resample_t = 1 #1 means no resampling
 
+### PLAYBACK PARAMETERS
+show_tracking = True #OPTIONS: True / False
+
 ### MARKING PARAMETERS
-arm_border = 'outer' #OPTIONS: central / outer
+arm_border = 'central' #OPTIONS: central / outer
 resample_m = 1 #1 means no resampling
 wall_thresh = 6 #may help find proper start time, ask ben before changing
 wall_thresh_x = 0.33 #may help find proper start time, ask ben before changing
@@ -77,7 +79,7 @@ logfile = open(os.path.join('logs','%s.log'%str(int(time.time()))), 'a')
 print 'Log will be in %s'%('%s.log'%str(int(time.time())))
 print 'Program running...'
 
-mark_mode = dict(central='extend', outer='normal')[arms]
+mark_mode = dict(central='extend', outer='normal')[arm_border]
 if include_hab:
     exclude_word = 'EXEXEX'
 elif not include_hab:
@@ -137,7 +139,7 @@ elif mode == 'single':
     if actions == 'play':
         print >>logfile, "Playing %s #%i"%(mouse,n);logfile.flush()
         pb = Playback(ymaze_path=mouse, ymaze_n=n, data_dir=data_dir)
-        pb.play()
+        pb.play(draw=show_tracking)
     
 elif mode == 'collect':
     mice = [m for m in os.listdir(data_dir) if exclude_word not in m.lower() and m[0]!='.' and 'summary' not in m]

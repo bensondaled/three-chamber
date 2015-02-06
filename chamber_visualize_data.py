@@ -73,8 +73,14 @@ if __name__ == '__main__':
     #datadir = 'C:\\Users\\andreag\\Desktop\\chamber_examples' #backslashes must be doubled!
     group1 = ['DREADD_JM_062614_01']
     dreaddonly = ['DREADD_AG_061614_01', 'DREADD_AG_061614_02', 'DREADD_JM_061614_01', 'DREADD_JM_061714_01', 'DREADD_JM_061814_01', 'DREADD_JM_061814_02']
+    dreaddonlyCrIandII = ['DREADD_AG_061614_01', 'DREADD_AG_061614_02', 'DREADD_JM_061614_01', 'DREADD_JM_061714_01', 'DREADD_JM_061814_01']
     cocktail = ['DREADD_JM_061914_01', 'DREADD_JM_062014_01', 'DREADD_JM_062514_01', 'DREADD_JM_062614_01']
-    mice = cocktail
+    group3 = ['DREADDlob6_1', 'DREADDlob6_2', 'DREADDlob6_3', 'DREADDlob6_4', 'DREADDlob6_5']
+    group4 = ['DREADDgrp4_1', 'DREADDgrp4_2', 'DREADDgrp4_3', 'DREADDgrp4_4']
+    group5 = ['DREADDgrp5_1', 'DREADDgrp5_2', 'DREADDgrp5_3', 'DREADDgrp5_5']
+    Allgroups = ['DREADDlob6_1', 'DREADDlob6_2', 'DREADDlob6_3', 'DREADDlob6_4', 'DREADDlob6_5', 'DREADDgrp4_1', 'DREADDgrp4_3', 'DREADDgrp4_4', 'DREADDgrp5_1', 'DREADDgrp5_2', ]
+    
+    mice = Allgroups
 
     # Parameters
     sigma = 1.5
@@ -84,9 +90,9 @@ if __name__ == '__main__':
 
     # Choose what to display
     bg_image = data[BASELINE][IMG]
-    #to_show = data[TEST][HEAT]-data[BASELINE][HEAT]
+    to_show = data[TEST][HEAT]-data[BASELINE][HEAT]
     #to_show = data[TEST][HEAT]
-    to_show = data[BASELINE][HEAT]
+    #to_show = data[BASELINE][HEAT]
     
     # Make the data look better (option 1)
     # to_show = np.ma.masked_where(np.abs(to_show)<np.percentile(to_show, 60), to_show)
@@ -97,4 +103,4 @@ if __name__ == '__main__':
     pl.imshow(bg_image, cmap=mpl_cm.Greys_r)
     pl.imshow(to_show , cmap=mpl_cm.jet)
     pl.colorbar()
-    pl.savefig('DREADDs_COCKTAIL_MICE_ALL_baseline' + '.png')
+    pl.savefig('DREADD_Grp3and4_diff' + '.png')
