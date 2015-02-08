@@ -28,22 +28,22 @@ Points to avoid errors:
 """
 
 ### GENERAL PARAMETERS
-condition = 'Black6' #OPTIONS: Black6 / DREADDs
-mode = 'group' #OPTIONS: group / single / collect
-actions = 'both' #OPTIONS:  track / mark / both / play
-include_hab = False #OPTIONS: True / False
+condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
+mode = 'single' #OPTIONS: group / single / collect
+actions = 'mark' #OPTIONS:  track / mark / both / play
+include_hab = True #OPTIONS: True / False
 drive = 'Z:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
 ### FOR GROUP MODE
 mice = ['all'] #OPTIONS: ['Black6_Y_1_acq1','Black6_Y_1_acq2'] / 'all' / 'ask'
 
 ### FOR SINGLE MODE
-mouse = 'Black6_Y_1_acq1' #name of the folder containing the mouse's 5 trials
-n = 1 #OPTIONS: 1 / 2 / 3 / 4 / 5 (movie number)
+mouse = 'DREADD_GR5_M3_hab' #name of the folder containing the mouse's 5 trials
+n = 2 #OPTIONS: 1 / 2 / 3 / 4 / 5 (movie number)
 
 ### TRACKING PARAMETERS
 diff_thresh = 95
-show = False #OPTIONS: True / False
+show = True #OPTIONS: True / False
 ms_bt_frames = 1 #milliseconds between frames when showing
 resample_t = 1 #1 means no resampling
 
@@ -119,7 +119,7 @@ if mode == 'group':
                 if actions in ['track','both']:
                     print >>logfile, "(%i/%i) Tracking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
                     mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
-                    mt.run(show=show, save=save_video, wait=ms_bt_frames)
+                    mt.run(show=show, wait=ms_bt_frames)
                 if actions in ['mark','both']:
                     print >>logfile, "(%i/%i) Marking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
                     m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir, mark_mode=mark_mode)
@@ -131,7 +131,7 @@ elif mode == 'single':
     if actions in ['track','both']:
         print >>logfile, "Tracking %s #%i"%(mouse,n);logfile.flush()
         mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
-        mt.run(show=show, save=save_video, wait=ms_bt_frames)
+        mt.run(show=show, wait=ms_bt_frames)
     if actions in ['mark','both']:
         print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
         m = Marker(mouse=mouse, n=n, data_dir=data_dir, mark_mode=mark_mode)

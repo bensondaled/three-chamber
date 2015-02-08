@@ -480,7 +480,6 @@ class MouseTracker(object):
         cv2imshow('Tracking',frame)
         waitKey(wait)
     def run(self, show=False, save=False, tk_var_frame=None, wait=1):
-        print 'run1'
         #interfaces
         if show or save:
             fsize = (self.width*2, self.height)

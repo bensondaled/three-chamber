@@ -23,8 +23,12 @@ class Playback(object):
         self.t = np.squeeze(json.loads(open(self.timefile).read()))
         self.Ts = int(np.rint(np.mean(self.t[1:]-self.t[:-1])*1000))
         self.mov = cv2.VideoCapture(self.movfile)
-        self.tracking = np.load(self.trackfile)
-        self.contours = self.tracking['contour']
+        if os.path.exists(self.trackfile):
+            self.tracking = np.load(self.trackfile)
+            self.contours = self.tracking['contour']
+        else:
+            self.tracking = None
+            self.contours = None
         _=self.mov.read()
         self.t = self.t[1:]
     def play(self, draw=False):
@@ -44,7 +48,7 @@ class Playback(object):
                 tstr = "%0.3f"%(self.t[idx]-self.t[0])
                 frame = frame.astype(np.uint8)
                 cv2.putText(frame, tstr, (0,frame.shape[0]-3), cv2.FONT_HERSHEY_SIMPLEX, 1., (255,255,255))
-                if draw:
+                if draw and self.tracking!=None:
                     cv2.drawContours(frame, self.contours[idx], -1, (200,200,200), thickness=3)
                 cv2.imshow('Playback', frame)
                 idx += 1
