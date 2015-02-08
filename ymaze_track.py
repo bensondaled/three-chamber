@@ -479,8 +479,7 @@ class MouseTracker(object):
     def show_frame(self, frame, wait=1):
         cv2imshow('Tracking',frame)
         waitKey(wait)
-    def run(self, show=False, save=False, tk_var_frame=None, wait=1):
-        print 'run1'
+    def run(self, show=False, save=False, tk_var_frame=None, wait=1, start_pos='none'):
         #interfaces
         if show or save:
             fsize = (self.width*2, self.height)
@@ -500,7 +499,18 @@ class MouseTracker(object):
         self.pct_xadj = []
         self.heat = np.zeros((self.height,self.width))
         consecutive_skips = 0
-        self.last_center = np.mean(self.pts[np.array([self.xori_adj, self.xoli_adj])],axis=0).astype(int)
+        if start_pos == 'x':
+            start_pts = [self.xori_adj, self.xoli_adj]
+        elif start_pos == 'y':
+            start_pts = [self.yori_adj, self.yoli_adj]
+        elif start_pos == 'z':
+            start_pts = [self.zori_adj, self.zoli_adj]
+        elif start_pos == 'c':
+            start_pts = [self.zori, self.xori, self.yori]
+        elif start_pos == 'none':
+            start_pts = [self.zori, self.xori, self.yori]
+            consecutive_skips = self.consecutive_skip_threshold+1
+        self.last_center = np.mean(self.pts[np.array(start_pts)],axis=0).astype(int)
         self.last_contour = np.array([self.last_center])
         valid,frame,ts = self.get_frame(self.mov,skip=self.resample-1)
         while valid:
@@ -657,7 +667,7 @@ if __name__=='__main__':
     elif mode == 'nongui':
         data_dir = '/Volumes/wang/abadura/Y-Maze/DREADDs/'
         data_dir = '/Users/Benson/Desktop'
-        mouse = 'Black6_Y_3_rev3'
+        mouse = 'Black6_Y_1_acq2'
 
         mt = MouseTracker(mouse=mouse, n=1, data_dir=data_dir, diff_thresh=95)
-        mt.run(show=True, save=False, wait=1)
+        mt.run(show=True, save=False, wait=3000, start_pos='none')
