@@ -175,24 +175,32 @@ class Marker(object):
                 new_tr.append(t)
         new_tr.append(tr[-1])
         return np.array(new_tr)
-    def run(self, resample=1, thresh_p_hand=0.001,thresh_wall_dist=4,start_range=260,thresh_wall_dist_x=0.45):
+    def run(self, resample=1, thresh_p_hand=0.001,thresh_wall_dist=6,start_range=260,thresh_wall_dist_x=0.33, start_time='auto'):
         thresh_wall_dist_x = thresh_wall_dist_x*dist(self.pts[self.xoli],self.pts[self.xmli])
         #correct for proper start time:
-        if np.any(self.tracking['pct_xadj'][:start_range]):
-            started = False
-            for idx,c,p in zip(range(260),self.tracking['contour'][:start_range],self.tracking['pct_xadj'][:start_range]):
-                mindist_r = min([dist_pl(np.squeeze(ppp),self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
-                mindist_l = min([dist_pl(np.squeeze(ppp),self.pts[self.xoli],self.pts[self.xmli]) for ppp in c])
-                mindist_b = min([dist_pl(np.squeeze(ppp),self.pts[self.xoli],self.pts[self.xori]) for ppp in c])
-                onwall = mindist_b<=thresh_wall_dist_x and (mindist_r<=thresh_wall_dist or mindist_l<=thresh_wall_dist)
-                if not started and (p>thresh_p_hand or onwall):
-                    started = True
-                if started and p<thresh_p_hand and (not onwall):
-                    break
-        else:
-            idx = -1
-        start_idx = idx+1
-        self.start_idx = start_idx
+        if start_time == 'auto':
+            if np.any(self.tracking['pct_xadj'][:start_range]):
+                started = False
+                for idx,c,p in zip(range(260),self.tracking['contour'][:start_range],self.tracking['pct_xadj'][:start_range]):
+                    mindist_r = min([dist_pl(np.squeeze(ppp),self.pts[self.xori],self.pts[self.xmri]) for ppp in c])
+                    mindist_l = min([dist_pl(np.squeeze(ppp),self.pts[self.xoli],self.pts[self.xmli]) for ppp in c])
+                    mindist_b = min([dist_pl(np.squeeze(ppp),self.pts[self.xoli],self.pts[self.xori]) for ppp in c])
+                    onwall = mindist_b<=thresh_wall_dist_x and (mindist_r<=thresh_wall_dist or mindist_l<=thresh_wall_dist)
+                    if not started and (p>thresh_p_hand or onwall):
+                        started = True
+                    if started and p<thresh_p_hand and (not onwall):
+                        break
+            else:
+                idx = -1
+            start_idx = idx+1
+            self.start_idx = start_idx
+        elif start_time == None:
+            start_idx = 0
+            self.start_idx = 0
+        elif type(start_time) in [int,float]:
+            dsts = np.abs(self.tracking['time']-start_time)
+            start_idx = np.argmin(dsts)
+            self.start_idx = start_idx
         self.start_time = self.tracking['time'][start_idx]
         time = self.tracking['time'][start_idx:]
         pos = self.tracking['pos'][start_idx:]

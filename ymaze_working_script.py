@@ -54,10 +54,7 @@ show_tracking = True #OPTIONS: True / False
 ### MARKING PARAMETERS
 arm_border = 'central' #OPTIONS: central / outer
 resample_m = 1 #1 means no resampling
-wall_thresh = 6 #may help find proper start time, ask ben before changing
-wall_thresh_x = 0.33 #may help find proper start time, ask ben before changing
-hand_thresh = 0.001 #may help find proper start time, ask ben before changing
-start_range = 260 #may help find proper start time, ask ben before changing
+start_time = 'auto' #OPTIONS: 'auto' / time in seconds / None
 
 
 ### DON'T EDIT FROM HERE ###
@@ -125,7 +122,7 @@ if mode == 'group':
                 if actions in ['mark','both']:
                     print >>logfile, "(%i/%i) Marking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
                     m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir, mark_mode=mark_mode)
-                    m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range, thresh_wall_dist_x=wall_thresh_x)
+                    m.run(resample=resample_m, start_time=start_time)
             except:
                 print >>logfile, "%s #%i failed."%(mouse,tr+1);logfile.flush()
 
@@ -137,7 +134,7 @@ elif mode == 'single':
     if actions in ['mark','both']:
         print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
         m = Marker(mouse=mouse, n=n, data_dir=data_dir, mark_mode=mark_mode)
-        m.run(resample=resample_m, thresh_p_hand=hand_thresh, thresh_wall_dist=wall_thresh, start_range=start_range, thresh_wall_dist_x=wall_thresh_x)
+        m.run(resample=resample_m, start_time=start_time)
     if actions == 'play':
         print >>logfile, "Playing %s #%i"%(mouse,n);logfile.flush()
         pb = Playback(ymaze_path=mouse, ymaze_n=n, data_dir=data_dir)
