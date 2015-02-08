@@ -30,7 +30,7 @@ Points to avoid errors:
 ### GENERAL PARAMETERS
 condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
 mode = 'single' #OPTIONS: group / single / collect
-actions = 'mark' #OPTIONS:  track / mark / both / play
+actions = 'play' #OPTIONS:  track / mark / both / play
 include_hab = True #OPTIONS: True / False
 drive = 'Z:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
