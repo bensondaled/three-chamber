@@ -18,7 +18,7 @@ class Playback(object):
             self.fh = FileHandler(self.data_dir, self.ymaze_path, self.ymaze_n)
             self.movfile = self.fh.get_path(self.fh.TRIAL, self.fh.MOV, self.ymaze_n)
             self.timefile = self.fh.get_path(self.fh.TRIAL, self.fh.TIME, self.ymaze_n)
-            self.trackfile = self.fh.make_path('tracking.npz', self.ymaze_n)
+            self.trackfile = self.fh.make_path('tracking.npz', n=self.ymaze_n)
 
         self.t = np.squeeze(json.loads(open(self.timefile).read()))
         self.Ts = int(np.rint(np.mean(self.t[1:]-self.t[:-1])*1000))
