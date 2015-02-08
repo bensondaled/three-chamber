@@ -46,6 +46,7 @@ diff_thresh = 95
 show = True #OPTIONS: True / False
 ms_bt_frames = 1 #milliseconds between frames when showing
 resample_t = 1 #1 means no resampling
+start_position = 'none' #OPTIONS: 'left' / 'right' / 'bottom' / 'center' / 'none'
 
 ### PLAYBACK PARAMETERS
 show_tracking = True #OPTIONS: True / False
@@ -80,6 +81,7 @@ print 'Log will be in %s'%('%s.log'%str(int(time.time())))
 print 'Program running...'
 
 mark_mode = dict(central='extend', outer='normal')[arm_border]
+start_position = dict(left='y',right='z',bottom='x',center='c',none='none')[start_position]
 if include_hab:
     exclude_word = 'EXEXEX'
 elif not include_hab:
@@ -119,7 +121,7 @@ if mode == 'group':
                 if actions in ['track','both']:
                     print >>logfile, "(%i/%i) Tracking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
                     mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
-                    mt.run(show=show, wait=ms_bt_frames)
+                    mt.run(show=show, wait=ms_bt_frames, start_pos=start_position)
                 if actions in ['mark','both']:
                     print >>logfile, "(%i/%i) Marking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
                     m = Marker(mouse=mouse, n=tr+1, data_dir=data_dir, mark_mode=mark_mode)
@@ -131,7 +133,7 @@ elif mode == 'single':
     if actions in ['track','both']:
         print >>logfile, "Tracking %s #%i"%(mouse,n);logfile.flush()
         mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
-        mt.run(show=show, wait=ms_bt_frames)
+        mt.run(show=show, wait=ms_bt_frames, start_pos=start_position)
     if actions in ['mark','both']:
         print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
         m = Marker(mouse=mouse, n=n, data_dir=data_dir, mark_mode=mark_mode)
