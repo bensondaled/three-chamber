@@ -48,7 +48,7 @@ class Playback(object):
                 tstr = "%0.3f"%(self.t[idx]-self.t[0])
                 frame = frame.astype(np.uint8)
                 cv2.putText(frame, tstr, (0,frame.shape[0]-3), cv2.FONT_HERSHEY_SIMPLEX, 1., (255,255,255))
-                if draw and self.tracking!=None:
+                if draw and self.tracking!=None and self.contours[idx].shape[0]>1:
                     cv2.drawContours(frame, self.contours[idx], -1, (200,200,200), thickness=3)
                 cv2.imshow('Playback', frame)
                 idx += 1
