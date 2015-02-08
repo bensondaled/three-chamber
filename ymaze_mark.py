@@ -43,7 +43,7 @@ class Marker(object):
         good = [[X,C],[C,X],[C,Y0],[Y0,C],[Y0,Y],[Y,Y0],[Y,YEND],[YEND,Y],[C,Z0],[Z0,C],[Z0,Z],[Z,Z0],[Z,ZEND],[ZEND,Z]]
         for tr in self.transitions:
             if [tr['from'],tr['to']] not in good:
-                raise Exception('Tracking does not make sense.')
+                raise Exception('Tracking does not make sense. \n %s'%(str(tr)))
 
     def end(self):
         self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time, start_idx=self.start_idx, mark_mode=self.mark_mode, chamber=self.chamber)
@@ -242,9 +242,9 @@ class Marker(object):
         self.end()
 
 if __name__ == '__main__':
-    data_dir = '/Volumes/wang/abadura/Y-Maze/Black6/'
-    data_dir = '/Users/Benson/Desktop/'
-    mouse = 'Black6_Y_2_hab'
+    data_dir = '/Volumes/wang/abadura/Y-Maze_analyzed/DREADDs'
+    #data_dir = '/Users/Benson/Desktop/'
+    mouse = 'DREADD_GR5_M3_hab'
 
     m = Marker(mouse=mouse, n=2, data_dir=data_dir)
-    m.run()
+    m.run(start_time=1.0)
