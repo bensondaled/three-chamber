@@ -10,6 +10,7 @@ import cv2
 from matplotlib import path as mpl_path
 from ymaze_track import FileHandler,ginput,dist,contour_center
 from scipy.io import savemat
+import warnings
 
 def dist_pl(p, p1, p2):
     #dist from point to line
@@ -43,7 +44,8 @@ class Marker(object):
         good = [[X,C],[C,X],[C,Y0],[Y0,C],[Y0,Y],[Y,Y0],[Y,YEND],[YEND,Y],[C,Z0],[Z0,C],[Z0,Z],[Z,Z0],[Z,ZEND],[ZEND,Z]]
         for tr in self.transitions:
             if [tr['from'],tr['to']] not in good:
-                raise Exception('Tracking does not make sense. \n %s'%(str(tr)))
+                return (False, 'Tracking does not make sense.')
+        return (True,'')
 
     def end(self):
         self.results = dict(n=self.n, score=self.score, transitions=self.transitions, room_key=self.room_key, time_to_correct=self.time_to_correct, distance=self.distance, start_time=self.start_time, start_idx=self.start_idx, mark_mode=self.mark_mode, chamber=self.chamber)
@@ -216,7 +218,7 @@ class Marker(object):
         moved = self.chamber[1:]-self.chamber[:-1]
         self.transitions = np.array(zip(durations[moved != 0], self.chamber[moved!=0], self.chamber[1:][moved != 0]), dtype=[('time',float),('from',int),('to',int)]) #time, chamber exited,  chamber entered
         self.transitions = self.correct_for_consecutive(self.transitions)
-        self.verify_tracking()
+        verif = self.verify_tracking()
 
         self.score = 'none'
         for t in self.transitions:
@@ -240,6 +242,7 @@ class Marker(object):
             self.time_to_correct = -1
 
         self.end()
+        return verif
 
 if __name__ == '__main__':
     data_dir = '/Volumes/wang/abadura/Y-Maze_analyzed/DREADDs'
