@@ -1,5 +1,5 @@
-three-chamber
-=============
+mouse behavioural data collection & analysis
+============================================
 
 This project contains the scripts necessary to collect and analyze data for the three chamber and Y-maze experiments.
 
