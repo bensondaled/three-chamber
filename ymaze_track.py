@@ -22,7 +22,7 @@ from pylab import ginput as plginput
 from pylab import savefig as plsavefig
 from pylab import close as plclose
 import matplotlib.cm as mpl_cm
-ion()
+pl.ion()
 
 #tkinter
 from tkFileDialog import askopenfilename, askdirectory
@@ -118,7 +118,7 @@ class FileHandler(object):
         return i-1
 
 class MouseTracker(object):
-    def __init__(self, mouse, n=1, data_dir='.', diff_thresh=80, resample=1, translation_max=50, smoothing_kernel=19, consecutive_skip_threshold=0.08, selection_from=[]):
+    def __init__(self, mouse, n=1, data_dir='.', diff_thresh=80, resample=1, translation_max=50, smoothing_kernel=19, consecutive_skip_threshold=0.08, selection_from=[], point_mode='auto'):
         self.mouse = mouse
         self.n = n
         self.data_dir = data_dir
@@ -150,7 +150,7 @@ class MouseTracker(object):
         self.mov = VideoCapture(self.fh.get_path(self.fh.TRIAL, self.fh.MOV))
         self.mov.read();self.time=self.time[1:]
         #self.get_frame(self.mov,n=40) #MUST ADJUST TIME IF USING THIS
-        self.load_pts()
+        self.load_pts(mode=point_mode)
         self.make_rooms()
 
     def end(self):
@@ -350,49 +350,60 @@ class MouseTracker(object):
             if self.verify_pts(add_to_all=False):
                 return True
         return False
-    def load_pts(self):
+    def load_pts(self, mode='auto'):
         try:
             self.man_update(np.load(self.fh.make_path('pts.npz', mode=self.fh.BL)))
         except:
-            self.all_possible_pts = []
-            invalid = True
-            attempts = 0
-            while invalid:
-                if attempts > 500:
-                    raise Exception('Pts cannot be found.')
-                img = self.background_image.copy()
-                lp_ksizes = [13,15,17,19,21,23,25] #from 5-15 before
-                lp_ksize = rand.choice(lp_ksizes)
-                sbd_areas = [range(3,20), range(61,140)] #8,26 46,55
-                sbd_area = [rand.choice(sbd_areas[0]), rand.choice(sbd_areas[1])]
-                sbd_circs = [np.arange(0.05,0.35), range(1000,1001)]#0.19,0.35 1000
-                sbd_circ = [rand.choice(sbd_circs[0]), rand.choice(sbd_circs[1])]
-                subtr_rowmeans = rand.choice([True,False])
+            if mode == 'auto':
+                self.all_possible_pts = []
+                invalid = True
+                attempts = 0
+                while invalid:
+                    if attempts > 500:
+                        raise Exception('Pts cannot be found.')
+                    img = self.background_image.copy()
+                    lp_ksizes = [13,15,17,19,21,23,25] #from 5-15 before
+                    lp_ksize = rand.choice(lp_ksizes)
+                    sbd_areas = [range(3,20), range(61,140)] #8,26 46,55
+                    sbd_area = [rand.choice(sbd_areas[0]), rand.choice(sbd_areas[1])]
+                    sbd_circs = [np.arange(0.05,0.35), range(1000,1001)]#0.19,0.35 1000
+                    sbd_circ = [rand.choice(sbd_circs[0]), rand.choice(sbd_circs[1])]
+                    subtr_rowmeans = rand.choice([True,False])
 
-                if subtr_rowmeans:
-                    img = img-np.mean(img,axis=1)[:,None]
-                img = cv2.Laplacian(img, cv2.CV_32F, ksize=lp_ksize)
-                img += abs(img.min())
-                img = img/img.max() *255
-                img = img.astype(np.uint8)
+                    if subtr_rowmeans:
+                        img = img-np.mean(img,axis=1)[:,None]
+                    img = cv2.Laplacian(img, cv2.CV_32F, ksize=lp_ksize)
+                    img += abs(img.min())
+                    img = img/img.max() *255
+                    img = img.astype(np.uint8)
 
-                #pl.figure(1);pl.imshow(img,cmap=pl.cm.Greys_r)
-                params = cv2.SimpleBlobDetector_Params()
-                params.filterByArea = True
-                params.filterByCircularity = True
-                params.minArea,params.maxArea = sbd_area
-                params.minCircularity,params.maxCircularity = sbd_circ
-                detector = cv2.SimpleBlobDetector(params)
-                fs = detector.detect(img)
-                pts = np.array([f.pt for f in fs])
+                    #pl.figure(1);pl.imshow(img,cmap=pl.cm.Greys_r)
+                    params = cv2.SimpleBlobDetector_Params()
+                    params.filterByArea = True
+                    params.filterByCircularity = True
+                    params.minArea,params.maxArea = sbd_area
+                    params.minCircularity,params.maxCircularity = sbd_circ
+                    detector = cv2.SimpleBlobDetector(params)
+                    fs = detector.detect(img)
+                    pts = np.array([f.pt for f in fs])
+                    pts = np.round(pts).astype(np.uint32)
+                    x = img.copy()
+                    for pt in pts:
+                        cv2.circle(x, tuple(pt), 4, (255,255,255), thickness=3)
+                    #pl.figure(2);pl.imshow(x);raw_input()
+                    self.pts = pts
+                    invalid = not self.verify_pts()
+                    attempts += 1
+            elif mode == 'manual':
+                pl.imshow(self.background_image, cmap=pl.cm.Greys_r)
+                pl.title('center3->middle6->outer6')
+                pts = pl.ginput(n=15, timeout=-1)
                 pts = np.round(pts).astype(np.uint32)
-                x = img.copy()
-                for pt in pts:
-                    cv2.circle(x, tuple(pt), 4, (255,255,255), thickness=3)
-                #pl.figure(2);pl.imshow(x);raw_input()
-                self.pts = pts
-                invalid = not self.verify_pts()
-                attempts += 1
+                self.pts = np.array(pts)
+                pl.close()
+                # note that verify is being skipped
+                self.c3i,self.m6i,self.o6i = np.arange(0,3),np.arange(3,9),np.arange(9,15)
+                self.pts_c = np.mean(self.pts, axis=0)
             self.classify_pts()
     def load_time(self):
         with open(self.fh.get_path(self.fh.TRIAL,self.fh.TIME),'r') as f:

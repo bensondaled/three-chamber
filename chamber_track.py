@@ -1,4 +1,4 @@
-#For the original setup before the overhaul. Names are _BG etc by convention, and separate folders exist for basline and test
+#For the original setup before the overhaul. Names are _BG etc by convention, and separate folders exist for baseline and test
 
 #natives
 import sys
@@ -269,6 +269,7 @@ class MouseTracker(object):
                 regions_ignore = np.array(regions_ignore)
             close()
             np.savez(os.path.join(self.trial_dir, '%s_selections'%self.trial_name), pts_l=pts_l, pts_r=pts_r, pts_c=pts_c, pts_mouse=pts_mouse, regions_ignore=regions_ignore)
+            savemat(os.path.join(self.trial_dir, '%s_selections'%self.trial_name), dict(pts_l=pts_l, pts_r=pts_r, pts_c=pts_c, pts_mouse=pts_mouse, regions_ignore=regions_ignore)) #THIS LINE
         path_l, path_r, path_c = [mpl_path.Path(pts) for pts in [pts_l,pts_r,pts_c]]
         last_center = np.round(np.mean(pts_mouse, axis=0)).astype(int)
         paths_ignore = [mpl_path.Path(pts) for pts in regions_ignore]
@@ -529,7 +530,8 @@ if __name__=='__main__':
     
     if mode == 'gui':
         root1 = tk.Tk()
-        data_dir = askdirectory(parent=root1, initialdir='C:\\Users\\andreag\\Desktop', mustexist=True, title='Select directory containing data folders.')
+        # select starting folder here:
+        data_dir = askdirectory(parent=root1, initialdir=r'Z:\abadura\Julia\DREADDs\SocialChamber\Analyzed', mustexist=True, title='Select directory containing data folders.')
         if not data_dir:
             root1.destroy()
             sys.exit(0)

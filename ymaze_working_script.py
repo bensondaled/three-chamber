@@ -30,32 +30,33 @@ Points to avoid errors:
 
 ### GENERAL PARAMETERS
 condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
-mode = 'single' #OPTIONS: group/ single /collect
+mode = 'collect' #OPTIONS: group/ single /collect
 actions = 'both' #OPTIONS:  track / mark / both / play
-include_hab = True #OPTIONS: True / False
+include_hab = True  #OPTIONS: True/False
 drive = 'Z:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
 ### FOR GROUP MODE
 mice = ['all'] #OPTIONS: ['Black6_Y_1_acq1','Black6_Y_1_acq2'] / 'all' / 'ask'
 
 ### FOR SINGLE MODE
-mouse = 'DREADD_GR10_M2_hab' #name of the folder containing the mouse's 5 trials
+mouse = 'tsc1-372-hab' #name of the folder containing the mouse's 5 trials
 n = 2 #OPTIONS: 1 / 2 / 3 / 4 / 5 (movie number)
 
 ### TRACKING PARAMETERS
-diff_thresh = 60
+diff_thresh = 95    #95 black mice; 40 white mice with a black marked stripe
 show = False #OPTIONS: True / False
 ms_bt_frames = 1 #milliseconds between frames when showing
 resample_t = 1 #1 means no resampling
 start_position = 'none' #OPTIONS: 'left' / 'right' / 'bottom' / 'center' / 'none'
+point_finding_mode = 'auto' #OPTIONS: 'auto' / 'manual'
 
 ### PLAYBACK PARAMETERS
-show_tracking = True #OPTIONS: True / False
+show_tracking = False #OPTIONS: True / False
 
 ### MARKING PARAMETERS
-arm_border = 'outer' #OPTIONS: central / outer
+arm_border = 'central' #OPTIONS: central / outer
 resample_m = 1 #1 means no resampling
-start_time = 2.0 #OPTIONS: 'auto' / time in seconds (ex: 2.0) / None
+start_time =  2.0 #OPTIONS: 'auto' for ACQ,test and REV / time in seconds (ex: 2.0) for habituation / None
 
 
 ### DON'T EDIT FROM HERE ###
@@ -86,7 +87,6 @@ elif not include_hab:
     exclude_word = 'hab'
 if 'all' in mice or mice == 'all':
     mice = sorted([m for m in os.listdir(data_dir) if exclude_word not in m.lower() and m[0]!='.' and 'summary' not in m]) # this will run all mice of the selected condition
-    
 elif mode=='group' and ('ask' in mice or mice == 'ask'):
     root1 = tk.Tk()
     tempdir = os.path.join('.','temp')
@@ -113,12 +113,12 @@ elif mode=='group' and ('ask' in mice or mice == 'ask'):
 if mode == 'group':
     for idx,mouse in enumerate(mice):
         fh = FileHandler(data_dir, mouse, n=1)
-        print '(%i/%i)'%(idx+1,len(mice))
+        print '(%i/%i) -- %s'%(idx+1,len(mice),mouse)
         for tr in xrange(fh.get_n_trials()):
             try:
                 if actions in ['track','both']:
                     print >>logfile, "(%i/%i) Tracking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
-                    mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
+                    mt = MouseTracker(mouse=mouse, n=tr+1, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t, point_mode=point_finding_mode)
                     mt.run(show=show, wait=ms_bt_frames, start_pos=start_position)
                 if actions in ['mark','both']:
                     print >>logfile, "(%i/%i) Marking %s #%i"%(idx+1,len(mice),mouse,tr+1);logfile.flush()
@@ -132,7 +132,7 @@ if mode == 'group':
 elif mode == 'single':
     if actions in ['track','both']:
         print >>logfile, "Tracking %s #%i"%(mouse,n);logfile.flush()
-        mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t)
+        mt = MouseTracker(mouse=mouse, n=n, data_dir=data_dir, diff_thresh=diff_thresh, resample=resample_t, point_mode=point_finding_mode)
         mt.run(show=show, wait=ms_bt_frames, start_pos=start_position)
     if actions in ['mark','both']:
         print >>logfile, "Marking %s #%i"%(mouse,n);logfile.flush()
