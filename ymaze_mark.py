@@ -216,7 +216,7 @@ class Marker(object):
         self.chamber = np.array(map(self.get_chamber, pos))
         durations = time[1:] - time[0]
         moved = self.chamber[1:]-self.chamber[:-1]
-        self.transitions = np.array(zip(durations[moved != 0], self.chamber[moved!=0], self.chamber[1:][moved != 0]), dtype=[('time',float),('from',int),('to',int)]) #time, chamber exited,  chamber entered
+        self.transitions = np.array(zip(durations[moved != 0], self.chamber[:-1][moved!=0], self.chamber[1:][moved != 0]), dtype=[('time',float),('from',int),('to',int)]) #time, chamber exited,  chamber entered
         self.transitions = self.correct_for_consecutive(self.transitions)
         verif = self.verify_tracking()
 
