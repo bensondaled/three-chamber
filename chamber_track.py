@@ -1,4 +1,4 @@
-#For the original setup before the overhaul. Names are _BG etc by convention, and separate folders exist for basline and test
+#For the original setup before the overhaul. Names are _BG etc by convention, and separate folders exist for baseline and test
 
 #natives
 import sys
@@ -152,7 +152,7 @@ class MouseTracker(object):
             self.fourcc = 1
         else:
             self.fourcc = -1
-        
+
         fh = FileHandler(self.data_dir, self.mouse)
         self.background_name = fh[mode][BACKGROUND][NAME]
         self.background_dir = fh[mode][BACKGROUND][DIR]
@@ -164,13 +164,13 @@ class MouseTracker(object):
         
         timefile = os.path.join(self.trial_dir, self.trial_name+'-timestamps.json')
         self.time = json.loads(open(timefile,'r').read())
-        try:
-            vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam.avi')
-            self.mov = VideoCapture(vidfile)
-        except:
+        vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam.avi')
+        if not os.path.exists(vidfile):
             vidfile = os.path.join(self.trial_dir, self.trial_name+'-cam0.avi')
-            self.mov = VideoCapture(vidfile)
-        
+        if not os.path.exists(vidfile):
+            raise Exception('Movie %s not found.'%vidfile)
+        self.mov = VideoCapture(vidfile)
+
         self.results = {}
         self.results['centers'] = []
         self.results['centers_all'] = []
@@ -269,6 +269,7 @@ class MouseTracker(object):
                 regions_ignore = np.array(regions_ignore)
             close()
             np.savez(os.path.join(self.trial_dir, '%s_selections'%self.trial_name), pts_l=pts_l, pts_r=pts_r, pts_c=pts_c, pts_mouse=pts_mouse, regions_ignore=regions_ignore)
+            savemat(os.path.join(self.trial_dir, '%s_selections'%self.trial_name), dict(pts_l=pts_l, pts_r=pts_r, pts_c=pts_c, pts_mouse=pts_mouse, regions_ignore=regions_ignore)) #THIS LINE
         path_l, path_r, path_c = [mpl_path.Path(pts) for pts in [pts_l,pts_r,pts_c]]
         last_center = np.round(np.mean(pts_mouse, axis=0)).astype(int)
         paths_ignore = [mpl_path.Path(pts) for pts in regions_ignore]
@@ -525,23 +526,29 @@ if __name__=='__main__':
            good.append(mousename)
         return good
     
-    root1 = tk.Tk()
-    data_dir = askdirectory(parent=root1, initialdir='C:\\Users\\andreag\\Desktop', mustexist=True, title='Select directory containing data folders.')
-    if not data_dir:
+    mode = 'gui'
+    
+    if mode == 'gui':
+        root1 = tk.Tk()
+        # select starting folder here:
+        data_dir = askdirectory(parent=root1, initialdir=r'Z:\abadura\Julia\DREADDs\SocialChamber\Analyzed', mustexist=True, title='Select directory containing data folders.')
+        if not data_dir:
+            root1.destroy()
+            sys.exit(0)
         root1.destroy()
-        sys.exit(0)
-    root1.destroy()
 
-    root = tk.Tk()
-    root.geometry("400x400+200+100")
-    
-    options = [o for o in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir,o))]
-    options = parse_mice_names(options)
-    
-    frame = MainFrame(root, options=options)
-    root.mainloop()
-    
-    #if tk version not working, one solution is to ditch gui and run manually:
-    #mt = MouseTracker(mouse='mouse1', mode=0, data_directory='C:\\Users\\andreag\\Desktop\\chamber_examples\\', resample=9, diff_thresh=80, selection_from=[])
-    #mt.run(show=True, save=False)
+        root = tk.Tk()
+        root.geometry("400x400+200+100")
+        
+        options = [o for o in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir,o))]
+        options = parse_mice_names(options)
+        
+        frame = MainFrame(root, options=options)
+        root.mainloop()
+    elif mode == 'nongui':
+        #if tk version not working, one solution is to ditch gui and run manually:
+        data_dir = 'E:\\METZGER\\DREADDs\\SocialChamber\\Videos'
+        mouse = 'DREADD_JM_061914_01'
+        mt = MouseTracker(mouse=mouse, mode=0, data_directory=data_dir, resample=9, diff_thresh=80, selection_from=[])
+        mt.run(show=True, save=False)
    
