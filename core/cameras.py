@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import cv2
-cv = cv2.cv
 import time
 import pylab as pl
 import json
@@ -22,9 +21,9 @@ class Camera(object):
             raise Exception('Video capture from camera failed to initialize.')
             sys.exit(1)
 
-        self.vc.set(cv.CV_CAP_PROP_FPS, self.frame_rate)
-        self.vc.set(cv.CV_CAP_PROP_FRAME_WIDTH, self.resolution[0])
-        self.vc.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self.resolution[1])
+        self.vc.set(cv2.CAP_PROP_FPS, self.frame_rate)
+        self.vc.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
+        self.vc.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
 
         time.sleep(0.01)
         self.vc.read()

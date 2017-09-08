@@ -4,7 +4,6 @@ from cameras import Camera
 import os
 import json
 import cv2
-cv = cv2.cv
 
 
 class Monitor(object):
@@ -14,7 +13,7 @@ class Monitor(object):
         self.cam = camera
         self.show = show
         self.save_on = save_on
-        cv2.namedWindow('Camera', cv.CV_WINDOW_NORMAL)
+        cv2.namedWindow('Camera', cv2.WINDOW_NORMAL)
         self.duration = duration
         if self.save_on:
             self.time = []
@@ -31,7 +30,7 @@ class Monitor(object):
             
             avi_file = os.path.join(self.dirr, self.run_name+'-cam.avi')
             self.writer = cv2.VideoWriter(avi_file,\
-            cv.CV_FOURCC('M','J','P','G'),\
+            cv2.VideoWriter_fourcc('M','J','P','G'),\
             self.cam.frame_rate,\
             frameSize=self.cam.resolution,\
             isColor=self.cam.color_mode)
