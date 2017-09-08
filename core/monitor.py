@@ -30,7 +30,7 @@ class Monitor(object):
             
             avi_file = os.path.join(self.dirr, self.run_name+'-cam.avi')
             self.writer = cv2.VideoWriter(avi_file,\
-            cv2.VideoWriter_fourcc('M','J','P','G'),\
+            0,\
             self.cam.frame_rate,\
             frameSize=self.cam.resolution,\
             isColor=self.cam.color_mode)
