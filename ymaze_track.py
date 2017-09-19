@@ -32,7 +32,6 @@ import Tkinter as tk
 #opencv
 from cv2 import getRotationMatrix2D, warpAffine, namedWindow, VideoCapture, destroyAllWindows, cvtColor, GaussianBlur, VideoWriter, absdiff, threshold, THRESH_BINARY, Canny, findContours,  RETR_EXTERNAL, CHAIN_APPROX_TC89_L1, contourArea, circle, waitKey, resize
 from cv2 import imshow as cv2imshow
-from cv2.cv import CV_RGB2GRAY, CV_FOURCC, CV_GRAY2RGB
 import cv2
 
 BASELINE = 0
@@ -134,7 +133,7 @@ class MouseTracker(object):
         self.cth2 = 0
         plat = sys.platform
         if 'darwin' in plat:
-            self.fourcc = CV_FOURCC('m','p','4','v') 
+            self.fourcc = cv2.VideoWriter_fourcc('m','p','4','v') 
         elif plat[:3] == 'win':
             self.fourcc = 1
         else:
@@ -439,7 +438,7 @@ class MouseTracker(object):
             ts = self.time[self.framei]
             self.framei += 1
             frame = frame.astype(np.float32)
-            frame = cvtColor(frame, CV_RGB2GRAY)
+            frame = cvtColor(frame, cv2.COLOR_RGB2GRAY)
             if blur:
                 frame = GaussianBlur(frame, (self.kernel,self.kernel), 0)
             return valid,frame,ts
@@ -461,7 +460,7 @@ class MouseTracker(object):
         diff_raw = self.diff.copy()
         self.diff = self.diff*self.border_mask
         edges = Canny(self.diff.astype(np.uint8), self.cth1, self.cth2)
-        contours, hier = findContours(edges, RETR_EXTERNAL, CHAIN_APPROX_TC89_L1)
+        _, contours, hier = findContours(edges, RETR_EXTERNAL, CHAIN_APPROX_TC89_L1)
         #contours = [c for c in contours if not any([pa.contains_point(contour_center(c)) for pa in self.paths_ignore])]
         if consecutive_skips>self.consecutive_skip_threshold:
             consecutive_skips=0
@@ -544,8 +543,8 @@ class MouseTracker(object):
             
             if show or save:
                 lframe = self.label_frame(frame, center)
-                save_frame[:,:self.width, :] = cvtColor(lframe.astype(np.float32), CV_GRAY2RGB)
-                save_frame[:,self.width:, :] = cvtColor((self.diff*255).astype(np.float32), CV_GRAY2RGB)
+                save_frame[:,:self.width, :] = cvtColor(lframe.astype(np.float32), cv2.COLOR_GRAY2RGB)
+                save_frame[:,self.width:, :] = cvtColor((self.diff*255).astype(np.float32), cv2.COLOR_GRAY2RGB)
             if show:
                 self.show_frame(save_frame, wait=wait)
             if save:
