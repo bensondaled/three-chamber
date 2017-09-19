@@ -29,11 +29,10 @@ Points to avoid errors:
 """
 
 ### GENERAL PARAMETERS
-condition = 'DREADDs' #OPTIONS: Black6 / DREADDs
+data_dir = 'Z:/myfolder' # full path to data, ex 'Z:/myfolder/mysubfolder'
 mode = 'collect' #OPTIONS: group/ single /collect
 actions = 'both' #OPTIONS:  track / mark / both / play
 include_hab = True  #OPTIONS: True/False
-drive = 'Z:' #the drive on which wang lab bucket is mounted, ex 'Y:'
 
 ### FOR GROUP MODE
 mice = ['all'] #OPTIONS: ['Black6_Y_1_acq1','Black6_Y_1_acq2'] / 'all' / 'ask'
@@ -73,7 +72,6 @@ from tkFileDialog import askopenfilenames
 import sys
 import Tkinter as tk
 from playback import Playback
-data_dir = os.path.join(drive, 'abadura', 'Y-Maze_analyzed', condition)
 
 logfile = open(os.path.join('logs','%s.log'%str(int(time.time()))), 'a')
 print 'Log will be in %s'%('%s.log'%str(int(time.time())))
