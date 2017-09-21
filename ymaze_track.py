@@ -451,7 +451,7 @@ class MouseTracker(object):
             if valid:
                 frame += new
         
-        if frame!=None:
+        if frame is not None:
             frame = frame/i
         return (valid, frame, ts)
     def find_possible_contours(self, frame, consecutive_skips):
