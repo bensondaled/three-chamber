@@ -8,6 +8,7 @@ import json
 import re
 import itertools as it
 import random as rand
+import warnings
 
 #numpy & scipy
 from scipy.io import savemat
@@ -382,7 +383,7 @@ class MouseTracker(object):
                     params.filterByCircularity = True
                     params.minArea,params.maxArea = sbd_area
                     params.minCircularity,params.maxCircularity = sbd_circ
-                    detector = cv2.SimpleBlobDetector(params)
+                    detector = cv2.SimpleBlobDetector_create(params)
                     fs = detector.detect(img)
                     pts = np.array([f.pt for f in fs])
                     pts = np.round(pts).astype(np.uint32)
@@ -407,6 +408,8 @@ class MouseTracker(object):
     def load_time(self):
         with open(self.fh.get_path(self.fh.TRIAL,self.fh.TIME),'r') as f:
             self.time = np.array(json.loads(f.read()))
+        with open(self.fh.get_path(self.fh.BL,self.fh.TIME),'r') as f:
+            self.bgtime = np.array(json.loads(f.read()))
         self.Ts = np.mean(self.time[1:]-self.time[:-1])
         self.fs = 1/self.Ts
     def load_background(self):
@@ -416,16 +419,20 @@ class MouseTracker(object):
             background_image = bg['image']
         except:
             blmov = VideoCapture(self.fh.get_path(self.fh.BL,self.fh.MOV))
-            valid, background, ts = self.get_frame(blmov, n=-1, blur=True)
+            valid, background, ts = self.get_frame(blmov, n=-1, blur=True, time_vec=self.bgtime)
             blmov.release()
+
+            self.framei=0
             
             blmov = VideoCapture(self.fh.get_path(self.fh.BL,self.fh.MOV))
-            valid, background_image, ts = self.get_frame(blmov, n=-1, blur=False)
+            valid, background_image, ts = self.get_frame(blmov, n=-1, blur=False, time_vec=self.bgtime)
             blmov.release()
             
             np.savez(self.fh.make_path('background.npz',mode=self.fh.BL), computations=background, image=background_image)
         self.background, self.background_image = background, background_image
-    def get_frame(self, mov, n=1, skip=0, blur=True):
+    def get_frame(self, mov, n=1, skip=0, blur=True, time_vec=None):
+        if time_vec is None:
+            time_vec = self.time
         for s in range(skip):
             mov.read()
             self.framei += 1 #the number of frames that have been read
@@ -435,7 +442,12 @@ class MouseTracker(object):
             valid, frame = mov.read()
             if not valid:
                 return (False, None, None)
-            ts = self.time[self.framei]
+            if self.framei<len(time_vec):
+                ts = time_vec[self.framei]
+            else:
+                ts = time_vec[-1]
+                if self.framei > len(time_vec)+1:
+                    warnings.warn('Timestamp-frame count mismatch >1')
             self.framei += 1
             frame = frame.astype(np.float32)
             frame = cvtColor(frame, cv2.COLOR_RGB2GRAY)
