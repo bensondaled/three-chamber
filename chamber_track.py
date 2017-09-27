@@ -328,7 +328,7 @@ class MouseTracker(object):
             if valid:
                 frame += new
         
-        if frame!=None:
+        if frame is not None:
             frame = frame/i
         return (valid, frame)
     def run(self, show=False, save=False, tk_var_frame=None):
