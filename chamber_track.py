@@ -307,9 +307,11 @@ class MouseTracker(object):
         return background, background_image
     def get_frame(self, mov, n=1, skip=0, blur=True):
         for s in range(skip):
-            mov.read()
+            valid,fr = mov.read()
+            if not valid:
+                return (False, None)
         if n==-1:
-            n = 99999999999999999.
+            n = 1e10
         def get():
             valid, frame = mov.read()
             if not valid:
