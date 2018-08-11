@@ -99,10 +99,10 @@ class Analysis(object):
         pts_l = pts['pts_l']
         pts_r = pts['pts_r']
         allpoints = np.append(pts_l,pts_r,axis=0)
-        left = np.min([i[0] for i in allpoints])
-        right = np.max([i[0] for i in allpoints])
-        top = np.min([i[1] for i in allpoints])
-        bottom = np.max([i[1] for i in allpoints])
+        left = int(np.min([i[0] for i in allpoints]))
+        right = int(np.max([i[0] for i in allpoints]))
+        top = int(np.min([i[1] for i in allpoints]))
+        bottom = int(np.max([i[1] for i in allpoints]))
 
         cropped = img[top:bottom, left:right]
 
